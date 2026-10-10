@@ -10,33 +10,126 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_app'
+import { Route as AuthenticatedComecarRouteImport } from './routes/_authenticated/comecar'
+import { Route as AuthenticatedAppCartoesRouteImport } from './routes/_authenticated/_app/cartoes'
+import { Route as AuthenticatedAppInicioRouteImport } from './routes/_authenticated/_app/inicio'
+import { Route as AuthenticatedAppMaisRouteImport } from './routes/_authenticated/_app/mais'
+import { Route as AuthenticatedAppMovimentacoesRouteImport } from './routes/_authenticated/_app/movimentacoes'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedComecarRoute = AuthenticatedComecarRouteImport.update({
+  id: '/comecar',
+  path: '/comecar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppCartoesRoute = AuthenticatedAppCartoesRouteImport.update({
+  id: '/cartoes',
+  path: '/cartoes',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppInicioRoute = AuthenticatedAppInicioRouteImport.update({
+  id: '/inicio',
+  path: '/inicio',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppMaisRoute = AuthenticatedAppMaisRouteImport.update({
+  id: '/mais',
+  path: '/mais',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppMovimentacoesRoute =
+  AuthenticatedAppMovimentacoesRouteImport.update({
+    id: '/movimentacoes',
+    path: '/movimentacoes',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/comecar': typeof AuthenticatedComecarRoute
+  '/cartoes': typeof AuthenticatedAppCartoesRoute
+  '/inicio': typeof AuthenticatedAppInicioRoute
+  '/mais': typeof AuthenticatedAppMaisRoute
+  '/movimentacoes': typeof AuthenticatedAppMovimentacoesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/comecar': typeof AuthenticatedComecarRoute
+  '/cartoes': typeof AuthenticatedAppCartoesRoute
+  '/inicio': typeof AuthenticatedAppInicioRoute
+  '/mais': typeof AuthenticatedAppMaisRoute
+  '/movimentacoes': typeof AuthenticatedAppMovimentacoesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/comecar': typeof AuthenticatedComecarRoute
+  '/_authenticated/_app/cartoes': typeof AuthenticatedAppCartoesRoute
+  '/_authenticated/_app/inicio': typeof AuthenticatedAppInicioRoute
+  '/_authenticated/_app/mais': typeof AuthenticatedAppMaisRoute
+  '/_authenticated/_app/movimentacoes': typeof AuthenticatedAppMovimentacoesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/comecar'
+    | '/cartoes'
+    | '/inicio'
+    | '/mais'
+    | '/movimentacoes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/comecar'
+    | '/cartoes'
+    | '/inicio'
+    | '/mais'
+    | '/movimentacoes'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/_app'
+    | '/_authenticated/comecar'
+    | '/_authenticated/_app/cartoes'
+    | '/_authenticated/_app/inicio'
+    | '/_authenticated/_app/mais'
+    | '/_authenticated/_app/movimentacoes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +141,99 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_app': {
+      id: '/_authenticated/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comecar': {
+      id: '/_authenticated/comecar'
+      path: '/comecar'
+      fullPath: '/comecar'
+      preLoaderRoute: typeof AuthenticatedComecarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/_app/cartoes': {
+      id: '/_authenticated/_app/cartoes'
+      path: '/cartoes'
+      fullPath: '/cartoes'
+      preLoaderRoute: typeof AuthenticatedAppCartoesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/inicio': {
+      id: '/_authenticated/_app/inicio'
+      path: '/inicio'
+      fullPath: '/inicio'
+      preLoaderRoute: typeof AuthenticatedAppInicioRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/mais': {
+      id: '/_authenticated/_app/mais'
+      path: '/mais'
+      fullPath: '/mais'
+      preLoaderRoute: typeof AuthenticatedAppMaisRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/movimentacoes': {
+      id: '/_authenticated/_app/movimentacoes'
+      path: '/movimentacoes'
+      fullPath: '/movimentacoes'
+      preLoaderRoute: typeof AuthenticatedAppMovimentacoesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
   }
 }
 
+interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppCartoesRoute: typeof AuthenticatedAppCartoesRoute
+  AuthenticatedAppInicioRoute: typeof AuthenticatedAppInicioRoute
+  AuthenticatedAppMaisRoute: typeof AuthenticatedAppMaisRoute
+  AuthenticatedAppMovimentacoesRoute: typeof AuthenticatedAppMovimentacoesRoute
+}
+
+const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppCartoesRoute: AuthenticatedAppCartoesRoute,
+  AuthenticatedAppInicioRoute: AuthenticatedAppInicioRoute,
+  AuthenticatedAppMaisRoute: AuthenticatedAppMaisRoute,
+  AuthenticatedAppMovimentacoesRoute: AuthenticatedAppMovimentacoesRoute,
+}
+
+const AuthenticatedAppRouteWithChildren =
+  AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
+  AuthenticatedComecarRoute: typeof AuthenticatedComecarRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
+  AuthenticatedComecarRoute: AuthenticatedComecarRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
