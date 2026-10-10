@@ -21,9 +21,8 @@ function AppLayout() {
     setSelected(localStorage.getItem(WS_STORAGE_KEY));
   }, []);
 
-  if (workspaces.length === 0) return <Navigate to="/comecar" replace />;
-
   const workspace = workspaces.find((w) => w.id === selected) ?? workspaces[0];
+  if (!workspace) return <Navigate to="/comecar" replace />;
   const setWorkspaceId = (id: string) => {
     localStorage.setItem(WS_STORAGE_KEY, id);
     setSelected(id);
