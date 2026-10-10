@@ -1,24 +1,30 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Meu Controle — finanças simples para você, seu trabalho e sua família" },
+      { name: "description", content: "Saiba quanto entra, quanto sai, quanto deve e quanto pode guardar." },
+      { property: "og:title", content: "Meu Controle" },
+      { property: "og:description", content: "Saiba quanto entra, quanto sai, quanto deve e quanto pode guardar." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex min-h-screen flex-col items-center justify-center bg-hero px-6 text-center text-primary-foreground">
+      <h1 className="max-w-2xl text-4xl font-semibold md:text-6xl">Meu Controle</h1>
+      <p className="mt-4 max-w-lg text-lg opacity-90">
+        Saiba quanto entra, quanto sai, quanto deve e quanto pode guardar.
+      </p>
+      <Button variant="lime" size="lg" className="mt-8" asChild>
+        <Link to="/inicio">Começar grátis</Link>
+      </Button>
     </div>
   );
 }
