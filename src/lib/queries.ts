@@ -61,8 +61,20 @@ export const transactionsQuery = (ws: string) =>
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;
-      return data;
+      return data as unknown as Transaction[];
     },
   });
 
-export type Transaction = Awaited<ReturnType<NonNullable<ReturnType<typeof transactionsQuery>["queryFn"]>>>[number];
+export interface Transaction {
+  id: string;
+  kind: "income" | "expense" | "transfer";
+  description: string;
+  amount: number;
+  occurred_on: string;
+  status: "pending" | "paid";
+  payment_method: string | null;
+  account_id: string;
+  to_account_id: string | null;
+  category_id: string | null;
+  categories: { name: string } | null;
+}
