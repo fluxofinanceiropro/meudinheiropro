@@ -10,13 +10,15 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/use-workspace";
-import { balancesQuery, categoriesQuery, type Transaction } from "@/lib/queries";
+import { balancesQuery, cardsQuery, categoriesQuery, type Transaction } from "@/lib/queries";
 import { parseBRL, centsToDecimal, toCents } from "@/lib/money";
 import { todayISO, type TxKind } from "@/lib/finance";
+import { shiftDateMonths, splitInstallments } from "@/lib/cards";
 
 const METHODS = [
   { v: "pix", l: "Pix" },
   { v: "debit", l: "Débito" },
+  { v: "credit_card", l: "Crédito" },
   { v: "cash", l: "Dinheiro" },
   { v: "boleto", l: "Boleto" },
   { v: "transfer", l: "Transferência" },
@@ -34,6 +36,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
   const qc = useQueryClient();
   const { data: accounts = [] } = useQuery({ ...balancesQuery(workspace.id), enabled: open });
   const { data: categories = [] } = useQuery({ ...categoriesQuery(workspace.id), enabled: open });
+  const { data: cards = [] } = useQuery({ ...cardsQuery(workspace.id), enabled: open });
 
   const [kind, setKind] = useState<TxKind>("expense");
   const [description, setDescription] = useState("");
@@ -44,6 +47,8 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
   const [accountId, setAccountId] = useState("");
   const [toAccountId, setToAccountId] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [cardId, setCardId] = useState("");
+  const [installments, setInstallments] = useState("1");
 
   useEffect(() => {
     if (!open) return;
