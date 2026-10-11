@@ -38,7 +38,7 @@ export function AddCardDialog({ open, onOpenChange, editing }: Props) {
   const mutation = useMutation({
     mutationFn: async () => {
       if (!name.trim()) throw new Error("Informe o nome do cartão");
-      const cents = parseBRL(limit || "0");
+      const cents = parseBRL(limit || "0") ?? 0;
       if (cents < 0) throw new Error("Limite inválido");
       const row = {
         workspace_id: workspace.id,
