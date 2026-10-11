@@ -55,6 +55,50 @@ export type Database = {
           },
         ]
       }
+      cards: {
+        Row: {
+          closing_day: number
+          created_at: string
+          deleted_at: string | null
+          due_day: number
+          id: string
+          limit_amount: number
+          name: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          closing_day?: number
+          created_at?: string
+          deleted_at?: string | null
+          due_day?: number
+          id?: string
+          limit_amount?: number
+          name: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          closing_day?: number
+          created_at?: string
+          deleted_at?: string | null
+          due_day?: number
+          id?: string
+          limit_amount?: number
+          name?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cards_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -121,6 +165,7 @@ export type Database = {
         Row: {
           account_id: string
           amount: number
+          card_id: string | null
           category_id: string | null
           created_at: string
           created_by: string
@@ -138,6 +183,7 @@ export type Database = {
         Insert: {
           account_id: string
           amount: number
+          card_id?: string | null
           category_id?: string | null
           created_at?: string
           created_by?: string
@@ -155,6 +201,7 @@ export type Database = {
         Update: {
           account_id?: string
           amount?: number
+          card_id?: string | null
           category_id?: string | null
           created_at?: string
           created_by?: string
@@ -182,6 +229,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
             referencedColumns: ["id"]
           },
           {
