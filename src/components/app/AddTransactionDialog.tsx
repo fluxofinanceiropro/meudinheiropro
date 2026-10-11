@@ -86,7 +86,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
         description: description.trim(),
         amount: centsToDecimal(cents) as unknown as number,
         occurred_on: date,
-        status: (kind === "transfer" || isCredit || paid ? "paid" : "pending") as "paid" | "pending",
+        status: (kind === "transfer" || (!isCredit && paid) ? "paid" : "pending") as "paid" | "pending",
         payment_method: kind === "transfer" ? "transfer" : method,
         account_id: effectiveAccount,
         to_account_id: kind === "transfer" ? toAccountId : null,
