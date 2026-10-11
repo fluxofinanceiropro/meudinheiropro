@@ -93,7 +93,6 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
         category_id: kind === "transfer" ? null : categoryId || null,
         card_id: isCredit ? effectiveCard : null,
       };
-      if (isCredit) row.status = "pending";
       const n = isCredit ? Math.min(24, Math.max(1, Number.parseInt(installments) || 1)) : 1;
       if (editing) {
         const { error } = await supabase.from("transactions").update(row).eq("id", editing.id);
