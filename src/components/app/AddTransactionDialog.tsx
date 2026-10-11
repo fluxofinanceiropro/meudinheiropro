@@ -206,7 +206,26 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
             )}
           </div>
 
-          {kind !== "transfer" && (
+          {isCredit && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Cartão</Label>
+                <Select value={effectiveCard} onValueChange={setCardId}>
+                  <SelectTrigger><SelectValue placeholder="Cartão" /></SelectTrigger>
+                  <SelectContent>
+                    {cards.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="installments">Parcelas</Label>
+                <Input id="installments" type="number" min={1} max={24} value={installments}
+                  onChange={(e) => setInstallments(e.target.value)} disabled={!!editing} />
+              </div>
+            </div>
+          )}
+
+          {kind !== "transfer" && !isCredit && (
             <label className="flex items-center justify-between rounded-xl border p-3">
               <span className="text-sm">
                 <span className="font-medium">{kind === "income" ? "Já recebi" : "Já paguei"}</span>
