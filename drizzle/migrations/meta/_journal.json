@@ -8,6 +8,13 @@
       "when": 1791655113258,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791744652647,
+      "tag": "0001_create_cards",
+      "breakpoints": true
     }
   ]
 }

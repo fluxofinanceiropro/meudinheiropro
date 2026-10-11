@@ -10,13 +10,15 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/use-workspace";
-import { balancesQuery, categoriesQuery, type Transaction } from "@/lib/queries";
+import { balancesQuery, cardsQuery, categoriesQuery, type Transaction } from "@/lib/queries";
 import { parseBRL, centsToDecimal, toCents } from "@/lib/money";
 import { todayISO, type TxKind } from "@/lib/finance";
+import { shiftDateMonths, splitInstallments } from "@/lib/cards";
 
 const METHODS = [
   { v: "pix", l: "Pix" },
   { v: "debit", l: "Débito" },
+  { v: "credit_card", l: "Crédito" },
   { v: "cash", l: "Dinheiro" },
   { v: "boleto", l: "Boleto" },
   { v: "transfer", l: "Transferência" },
@@ -34,6 +36,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
   const qc = useQueryClient();
   const { data: accounts = [] } = useQuery({ ...balancesQuery(workspace.id), enabled: open });
   const { data: categories = [] } = useQuery({ ...categoriesQuery(workspace.id), enabled: open });
+  const { data: cards = [] } = useQuery({ ...cardsQuery(workspace.id), enabled: open });
 
   const [kind, setKind] = useState<TxKind>("expense");
   const [description, setDescription] = useState("");
@@ -44,6 +47,8 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
   const [accountId, setAccountId] = useState("");
   const [toAccountId, setToAccountId] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [cardId, setCardId] = useState("");
+  const [installments, setInstallments] = useState("1");
 
   useEffect(() => {
     if (!open) return;
@@ -56,7 +61,12 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
     setAccountId(editing?.account_id ?? "");
     setToAccountId(editing?.to_account_id ?? "");
     setCategoryId(editing?.category_id ?? "");
+    setCardId(editing?.card_id ?? "");
+    setInstallments("1");
   }, [open, editing]);
+
+  const isCredit = kind === "expense" && method === "credit_card";
+  const effectiveCard = cardId || cards[0]?.id || "";
 
   const effectiveAccount = accountId || accounts[0]?.account_id || "";
   const kindCategories = categories.filter((c) => c.kind === kind);
@@ -69,22 +79,38 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
       if (!effectiveAccount) throw new Error("Selecione uma conta");
       if (kind === "transfer" && (!toAccountId || toAccountId === effectiveAccount))
         throw new Error("Escolha uma conta de destino diferente");
+      if (isCredit && !effectiveCard) throw new Error("Selecione um cartão");
       const row = {
         workspace_id: workspace.id,
         kind,
         description: description.trim(),
         amount: centsToDecimal(cents) as unknown as number,
         occurred_on: date,
-        status: (kind === "transfer" || paid ? "paid" : "pending") as "paid" | "pending",
+        status: (kind === "transfer" || (!isCredit && paid) ? "paid" : "pending") as "paid" | "pending",
         payment_method: kind === "transfer" ? "transfer" : method,
         account_id: effectiveAccount,
         to_account_id: kind === "transfer" ? toAccountId : null,
         category_id: kind === "transfer" ? null : categoryId || null,
+        card_id: isCredit ? effectiveCard : null,
       };
-      const { error } = editing
-        ? await supabase.from("transactions").update(row).eq("id", editing.id)
-        : await supabase.from("transactions").insert(row);
-      if (error) throw error;
+      const n = isCredit ? Math.min(24, Math.max(1, Number.parseInt(installments) || 1)) : 1;
+      if (editing) {
+        const { error } = await supabase.from("transactions").update(row).eq("id", editing.id);
+        if (error) throw error;
+      } else if (n > 1) {
+        const parts = splitInstallments(cents, n);
+        const rows = parts.map((part, i) => ({
+          ...row,
+          description: `${row.description} (${i + 1}/${n})`,
+          amount: centsToDecimal(part) as unknown as number,
+          occurred_on: shiftDateMonths(date, i),
+        }));
+        const { error } = await supabase.from("transactions").insert(rows);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("transactions").insert(row);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       toast.success(editing ? "Movimentação atualizada" : "Movimentação adicionada");
@@ -179,7 +205,26 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
             )}
           </div>
 
-          {kind !== "transfer" && (
+          {isCredit && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Cartão</Label>
+                <Select value={effectiveCard} onValueChange={setCardId}>
+                  <SelectTrigger><SelectValue placeholder="Cartão" /></SelectTrigger>
+                  <SelectContent>
+                    {cards.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="installments">Parcelas</Label>
+                <Input id="installments" type="number" min={1} max={24} value={installments}
+                  onChange={(e) => setInstallments(e.target.value)} disabled={!!editing} />
+              </div>
+            </div>
+          )}
+
+          {kind !== "transfer" && !isCredit && (
             <label className="flex items-center justify-between rounded-xl border p-3">
               <span className="text-sm">
                 <span className="font-medium">{kind === "income" ? "Já recebi" : "Já paguei"}</span>
