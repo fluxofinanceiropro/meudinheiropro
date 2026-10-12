@@ -32,13 +32,19 @@ function Onboarding() {
   async function submit(e: FormEvent) {
     e.preventDefault();
     const cents = balance ? parseBRL(balance) : 0;
-    if (cents === null) return toast.error("Saldo inválido");
+    if (cents === null) {
+      toast.error("Saldo inválido");
+      return;
+    }
     setBusy(true);
     const { data, error } = await supabase.rpc("create_workspace", {
       _name: name, _kind: kind, _initial_balance: Number(centsToDecimal(cents)),
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     localStorage.setItem(WS_STORAGE_KEY, data as string);
     await qc.invalidateQueries({ queryKey: ["workspaces"] });
     navigate({ to: "/inicio" });
