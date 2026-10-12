@@ -32,10 +32,8 @@ export function progress(savedCents: number, targetCents: number): number {
 /** Whole months from `today` until `targetDate` (min 1 when date is in the future/current month, 0 when past). */
 export function monthsUntil(today: string, targetDate: string): number {
   const [ty = 0, tm = 0] = today.split("-").map(Number);
-  const [gy = 0, gm = 0, gd = 0] = targetDate.split("-").map(Number);
-  const [, , td = 0] = today.split("-").map(Number);
+  const [gy = 0, gm = 0] = targetDate.split("-").map(Number);
   let months = (gy - ty) * 12 + (gm - tm);
-  if (gd < td) months -= 0; // same-month deadlines still count as 1 below
   if (targetDate < today) return 0;
   return Math.max(1, months);
 }
