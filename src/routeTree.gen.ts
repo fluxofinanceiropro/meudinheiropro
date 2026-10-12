@@ -17,6 +17,7 @@ import { Route as AuthenticatedComecarRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppCartoesRouteImport } from './routes/_authenticated/_app/cartoes'
 import { Route as AuthenticatedAppInicioRouteImport } from './routes/_authenticated/_app/inicio'
 import { Route as AuthenticatedAppMaisRouteImport } from './routes/_authenticated/_app/mais'
+import { Route as AuthenticatedAppMetasRouteImport } from './routes/_authenticated/_app/metas'
 import { Route as AuthenticatedAppMovimentacoesRouteImport } from './routes/_authenticated/_app/movimentacoes'
 
 const IndexRoute = IndexRouteImport.update({
@@ -57,6 +58,11 @@ const AuthenticatedAppMaisRoute = AuthenticatedAppMaisRouteImport.update({
   path: '/mais',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppMetasRoute = AuthenticatedAppMetasRouteImport.update({
+  id: '/metas',
+  path: '/metas',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppMovimentacoesRoute =
   AuthenticatedAppMovimentacoesRouteImport.update({
     id: '/movimentacoes',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/cartoes': typeof AuthenticatedAppCartoesRoute
   '/inicio': typeof AuthenticatedAppInicioRoute
   '/mais': typeof AuthenticatedAppMaisRoute
+  '/metas': typeof AuthenticatedAppMetasRoute
   '/movimentacoes': typeof AuthenticatedAppMovimentacoesRoute
 }
 export interface FileRoutesByTo {
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/cartoes': typeof AuthenticatedAppCartoesRoute
   '/inicio': typeof AuthenticatedAppInicioRoute
   '/mais': typeof AuthenticatedAppMaisRoute
+  '/metas': typeof AuthenticatedAppMetasRoute
   '/movimentacoes': typeof AuthenticatedAppMovimentacoesRoute
 }
 export interface FileRoutesById {
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/cartoes': typeof AuthenticatedAppCartoesRoute
   '/_authenticated/_app/inicio': typeof AuthenticatedAppInicioRoute
   '/_authenticated/_app/mais': typeof AuthenticatedAppMaisRoute
+  '/_authenticated/_app/metas': typeof AuthenticatedAppMetasRoute
   '/_authenticated/_app/movimentacoes': typeof AuthenticatedAppMovimentacoesRoute
 }
 export interface FileRouteTypes {
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
     | '/cartoes'
     | '/inicio'
     | '/mais'
+    | '/metas'
     | '/movimentacoes'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/cartoes'
     | '/inicio'
     | '/mais'
+    | '/metas'
     | '/movimentacoes'
   id:
     | '__root__'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/cartoes'
     | '/_authenticated/_app/inicio'
     | '/_authenticated/_app/mais'
+    | '/_authenticated/_app/metas'
     | '/_authenticated/_app/movimentacoes'
   fileRoutesById: FileRoutesById
 }
@@ -190,6 +202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppMaisRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/metas': {
+      id: '/_authenticated/_app/metas'
+      path: '/metas'
+      fullPath: '/metas'
+      preLoaderRoute: typeof AuthenticatedAppMetasRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/movimentacoes': {
       id: '/_authenticated/_app/movimentacoes'
       path: '/movimentacoes'
@@ -204,6 +223,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppCartoesRoute: typeof AuthenticatedAppCartoesRoute
   AuthenticatedAppInicioRoute: typeof AuthenticatedAppInicioRoute
   AuthenticatedAppMaisRoute: typeof AuthenticatedAppMaisRoute
+  AuthenticatedAppMetasRoute: typeof AuthenticatedAppMetasRoute
   AuthenticatedAppMovimentacoesRoute: typeof AuthenticatedAppMovimentacoesRoute
 }
 
@@ -211,6 +231,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppCartoesRoute: AuthenticatedAppCartoesRoute,
   AuthenticatedAppInicioRoute: AuthenticatedAppInicioRoute,
   AuthenticatedAppMaisRoute: AuthenticatedAppMaisRoute,
+  AuthenticatedAppMetasRoute: AuthenticatedAppMetasRoute,
   AuthenticatedAppMovimentacoesRoute: AuthenticatedAppMovimentacoesRoute,
 }
 

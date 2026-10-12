@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Goal, GoalEntry } from "./goals";
 
 export const workspacesQuery = () =>
   queryOptions({
@@ -95,3 +96,19 @@ export interface Transaction {
   card_id: string | null;
   categories: { name: string } | null;
 }
+
+export const goalsQuery = (ws: string) =>
+  queryOptions({
+    queryKey: ["goals", ws],
+    queryFn: async () => {
+      const [g, e] = await Promise.all([
+        supabase.from("goals").select("id,name,kind,target_amount,target_date")
+          .eq("workspace_id", ws).is("deleted_at", null).order("created_at"),
+        supabase.from("goal_entries").select("id,goal_id,amount,occurred_on,note")
+          .eq("workspace_id", ws).is("deleted_at", null).order("occurred_on", { ascending: false }),
+      ]);
+      if (g.error) throw g.error;
+      if (e.error) throw e.error;
+      return { goals: g.data as Goal[], entries: e.data as GoalEntry[] };
+    },
+  });
