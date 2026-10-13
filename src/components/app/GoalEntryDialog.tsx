@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,10 @@ import { useWorkspace } from "@/hooks/use-workspace";
 import { parseBRL, centsToDecimal, formatBRL } from "@/lib/money";
 import { todayISO } from "@/lib/finance";
 import type { Goal } from "@/lib/goals";
+import { balancesQuery } from "@/lib/queries";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const NO_ACCOUNT = "none";
 
 interface Props {
   goal: Goal | null;
@@ -25,6 +29,9 @@ export function GoalEntryDialog({ goal, savedCents, onOpenChange }: Props) {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(todayISO());
   const [note, setNote] = useState("");
+  const { data: accounts = [] } = useQuery(balancesQuery(workspace.id));
+  const [accountId, setAccountId] = useState<string>(NO_ACCOUNT);
+  const effectiveAccount = accountId;
 
   useEffect(() => {
     if (!goal) return;
@@ -32,6 +39,8 @@ export function GoalEntryDialog({ goal, savedCents, onOpenChange }: Props) {
     setAmount("");
     setDate(todayISO());
     setNote("");
+    setAccountId(accounts[0]?.account_id ?? NO_ACCOUNT);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goal]);
 
   const mutation = useMutation({
@@ -47,12 +56,14 @@ export function GoalEntryDialog({ goal, savedCents, onOpenChange }: Props) {
         amount: centsToDecimal(signed) as unknown as number,
         occurred_on: date,
         note: note.trim() || null,
+        account_id: effectiveAccount === NO_ACCOUNT ? null : effectiveAccount,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success(mode === "in" ? "Valor guardado" : "Retirada registrada");
       qc.invalidateQueries({ queryKey: ["goals", workspace.id] });
+      qc.invalidateQueries({ queryKey: ["balances", workspace.id] });
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -87,6 +98,18 @@ export function GoalEntryDialog({ goal, savedCents, onOpenChange }: Props) {
               <Label htmlFor="entry-date">Data</Label>
               <Input id="entry-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="entry-account">{mode === "in" ? "Sai da conta" : "Volta para a conta"}</Label>
+            <Select value={effectiveAccount} onValueChange={setAccountId}>
+              <SelectTrigger id="entry-account"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => a.account_id && (
+                  <SelectItem key={a.account_id} value={a.account_id}>{a.name}</SelectItem>
+                ))}
+                <SelectItem value={NO_ACCOUNT}>Nenhuma (não altera o saldo)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="entry-note">Observação (opcional)</Label>
