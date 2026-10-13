@@ -1,8 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import type { Transaction } from "@/lib/queries";
 import { currentMonth } from "@/lib/finance";
+import { shiftInvoiceKey, invoiceLabel } from "@/lib/cards";
 import { formatBRL, toCents } from "@/lib/money";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const COLORS = [
   "var(--color-chart-1)",
@@ -19,8 +22,8 @@ interface Slice {
 }
 
 export function SpendingChart({ transactions }: { transactions: Transaction[] }) {
+  const [month, setMonth] = useState(currentMonth);
   const slices = useMemo<Slice[]>(() => {
-    const month = currentMonth();
     const byCat = new Map<string, number>();
     for (const t of transactions) {
       if (t.kind !== "expense" || t.status !== "paid") continue;
@@ -37,7 +40,7 @@ export function SpendingChart({ transactions }: { transactions: Transaction[] })
       value,
       color: COLORS[i % COLORS.length] ?? COLORS[0]!,
     }));
-  }, [transactions]);
+  }, [transactions, month]);
 
   const total = slices.reduce((s, x) => s + x.value, 0);
 
