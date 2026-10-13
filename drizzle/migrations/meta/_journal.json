@@ -22,6 +22,13 @@
       "when": 1791817144920,
       "tag": "0002_create_goals",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791889310294,
+      "tag": "0003_goal_entries_account",
+      "breakpoints": true
     }
   ]
 }

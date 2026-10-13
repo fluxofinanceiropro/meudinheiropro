@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useWorkspace } from "@/hooks/use-workspace";
-import { balancesQuery, transactionsQuery } from "@/lib/queries";
+import { balancesQuery, transactionsQuery, goalsQuery } from "@/lib/queries";
+import { savedByGoal, progress } from "@/lib/goals";
+import { Progress } from "@/components/ui/progress";
 import { summarizeMonth, currentMonth } from "@/lib/finance";
 import { formatBRL, toCents } from "@/lib/money";
 
@@ -15,6 +17,10 @@ function Inicio() {
   const { data: accounts = [] } = useQuery(balancesQuery(workspace.id));
   const { data: txs = [] } = useQuery(transactionsQuery(workspace.id));
   const total = accounts.reduce((s, a) => s + toCents(a.balance), 0);
+  const { data: goalsData } = useQuery(goalsQuery(workspace.id));
+  const saved = savedByGoal(goalsData?.entries ?? []);
+  const goals = goalsData?.goals ?? [];
+  const totalSaved = [...saved.values()].reduce((s, v) => s + v, 0);
   const m = summarizeMonth(txs, currentMonth());
 
   return (
@@ -37,6 +43,29 @@ function Inicio() {
             <span className="tabular font-medium">{formatBRL(toCents(a.balance))}</span>
           </div>
         ))}
+      </section>
+      <section className="rounded-2xl bg-card p-4 shadow-soft">
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="font-semibold">Reserva e metas</h2>
+          <Link to="/metas" className="text-sm text-primary">Ver tudo</Link>
+        </div>
+        <p className="mb-3 text-sm text-muted-foreground">Total guardado: <span className="tabular font-medium text-foreground">{formatBRL(totalSaved)}</span></p>
+        {goals.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma meta criada ainda.</p>}
+        <ul className="space-y-3">
+          {goals.slice(0, 3).map((g) => {
+            const s = saved.get(g.id) ?? 0;
+            const t = toCents(g.target_amount);
+            return (
+              <li key={g.id} className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>{g.name}</span>
+                  <span className="tabular text-muted-foreground">{formatBRL(s)} / {formatBRL(t)}</span>
+                </div>
+                <Progress value={progress(s, t) * 100} aria-label={`Progresso de ${g.name}`} />
+              </li>
+            );
+          })}
+        </ul>
       </section>
     </div>
   );
