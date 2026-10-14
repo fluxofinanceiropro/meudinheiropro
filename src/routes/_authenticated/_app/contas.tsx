@@ -26,7 +26,7 @@ export const ACCOUNT_KIND_LABEL: Record<string, string> = {
   other: "Outra",
 };
 
-interface AccountForm { id?: string; name: string; kind: string; initial: string }
+interface AccountForm { id?: string | undefined; name: string; kind: string; initial: string }
 interface CategoryForm { id?: string; name: string; kind: "expense" | "income" }
 
 function ContasPage() {
@@ -52,7 +52,7 @@ function ContasPage() {
       toast.error("Informe o nome da conta");
       return;
     }
-    const row = { name, kind: acc.kind, initial_balance: centsToDecimal(parseBRL(acc.initial) ?? 0) };
+    const row = { name, kind: acc.kind, initial_balance: Number(centsToDecimal(parseBRL(acc.initial) ?? 0)) };
     setSaving(true);
     const { error } = acc.id
       ? await supabase.from("accounts").update(row).eq("id", acc.id)
