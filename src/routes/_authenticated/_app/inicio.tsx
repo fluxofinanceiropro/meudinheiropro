@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/_app/inicio")({
 
 function Inicio() {
   const { workspace } = useWorkspace();
+  const [adjusting, setAdjusting] = useState(false);
   const { data: accounts = [] } = useQuery(balancesQuery(workspace.id));
   const { data: txs = [] } = useQuery(transactionsQuery(workspace.id));
   const total = accounts.reduce((s, a) => s + toCents(a.balance), 0);
@@ -29,10 +30,22 @@ function Inicio() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-3xl bg-hero p-6 text-primary-foreground shadow-soft">
-        <p className="text-sm opacity-80">Saldo disponível</p>
-        <p className="font-display text-4xl font-semibold tabular">{formatBRL(total)}</p>
-      </section>
+      <button
+        type="button"
+        onClick={() => setAdjusting(true)}
+        aria-label="Ajustar saldo das contas"
+        className="block w-full cursor-pointer rounded-3xl bg-hero p-6 text-left text-primary-foreground shadow-soft transition active:scale-[0.99]"
+      >
+        <span className="flex items-center justify-between">
+          <span className="text-sm opacity-80">Saldo disponível</span>
+          <span className="flex items-center gap-1 text-xs opacity-80">
+            <Pencil className="h-3 w-3" aria-hidden />
+            Ajustar
+          </span>
+        </span>
+        <span className="block font-display text-4xl font-semibold tabular">{formatBRL(total)}</span>
+      </button>
+      <AdjustBalanceDialog open={adjusting} onOpenChange={setAdjusting} />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Entradas do mês" value={m.income} tone="text-income" />
         <Stat label="Saídas do mês" value={m.expense} tone="text-expense" />
