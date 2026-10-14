@@ -44,15 +44,40 @@ export function SpendingChart({ transactions }: { transactions: Transaction[] })
 
   const total = slices.reduce((s, x) => s + x.value, 0);
 
+  const isCurrent = month === currentMonth();
+  const nav = (
+    <div className="mb-3 flex items-center justify-between gap-2">
+      <Button variant="ghost" size="icon" aria-label="Mês anterior" onClick={() => setMonth((m) => shiftInvoiceKey(m, -1))}>
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium capitalize">{invoiceLabel(month)}</span>
+        {!isCurrent && (
+          <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setMonth(currentMonth())}>
+            Este mês
+          </Button>
+        )}
+      </div>
+      <Button variant="ghost" size="icon" aria-label="Próximo mês" onClick={() => setMonth((m) => shiftInvoiceKey(m, 1))}>
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+
   if (slices.length === 0) {
     return (
-      <p className="py-6 text-center text-sm text-muted-foreground">
-        Nenhuma saída paga neste mês.
-      </p>
+      <div>
+        {nav}
+        <p className="py-6 text-center text-sm text-muted-foreground">
+          Nenhuma saída paga em {invoiceLabel(month)}.
+        </p>
+      </div>
     );
   }
 
   return (
+    <div>
+    {nav}
     <div className="flex items-center gap-4">
       <div className="h-40 w-40 shrink-0">
         <ResponsiveContainer width="100%" height="100%">
@@ -88,6 +113,7 @@ export function SpendingChart({ transactions }: { transactions: Transaction[] })
           </li>
         ))}
       </ul>
+    </div>
     </div>
   );
 }
