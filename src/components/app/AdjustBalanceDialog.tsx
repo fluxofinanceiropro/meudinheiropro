@@ -47,7 +47,7 @@ export function AdjustBalanceDialog({ open, onOpenChange }: Props) {
         const newInitial = initial + (desired - current);
         const { error } = await supabase
           .from("accounts")
-          .update({ initial_balance: centsToDecimal(newInitial) })
+          .update({ initial_balance: Number(centsToDecimal(newInitial)) })
           .eq("id", id);
         if (error) throw error;
       }
