@@ -37,7 +37,7 @@ function Inicio() {
         <Stat label="Resultado" value={m.net} tone="text-foreground" />
       </div>
       <section className="rounded-2xl bg-card p-4 shadow-soft">
-        <h2 className="mb-3 font-semibold">Gastos do mês por categoria</h2>
+        <h2 className="mb-3 font-semibold">Gastos por categoria</h2>
         <SpendingChart transactions={txs} />
       </section>
       <section className="rounded-2xl bg-card p-4 shadow-soft">

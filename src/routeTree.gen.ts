@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_app'
 import { Route as AuthenticatedComecarRouteImport } from './routes/_authenticated/comecar'
 import { Route as AuthenticatedAppCartoesRouteImport } from './routes/_authenticated/_app/cartoes'
+import { Route as AuthenticatedAppContasRouteImport } from './routes/_authenticated/_app/contas'
 import { Route as AuthenticatedAppInicioRouteImport } from './routes/_authenticated/_app/inicio'
 import { Route as AuthenticatedAppMaisRouteImport } from './routes/_authenticated/_app/mais'
 import { Route as AuthenticatedAppMetasRouteImport } from './routes/_authenticated/_app/metas'
@@ -48,6 +49,11 @@ const AuthenticatedAppCartoesRoute = AuthenticatedAppCartoesRouteImport.update({
   path: '/cartoes',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppContasRoute = AuthenticatedAppContasRouteImport.update({
+  id: '/contas',
+  path: '/contas',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppInicioRoute = AuthenticatedAppInicioRouteImport.update({
   id: '/inicio',
   path: '/inicio',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/comecar': typeof AuthenticatedComecarRoute
   '/cartoes': typeof AuthenticatedAppCartoesRoute
+  '/contas': typeof AuthenticatedAppContasRoute
   '/inicio': typeof AuthenticatedAppInicioRoute
   '/mais': typeof AuthenticatedAppMaisRoute
   '/metas': typeof AuthenticatedAppMetasRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/comecar': typeof AuthenticatedComecarRoute
   '/cartoes': typeof AuthenticatedAppCartoesRoute
+  '/contas': typeof AuthenticatedAppContasRoute
   '/inicio': typeof AuthenticatedAppInicioRoute
   '/mais': typeof AuthenticatedAppMaisRoute
   '/metas': typeof AuthenticatedAppMetasRoute
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/comecar': typeof AuthenticatedComecarRoute
   '/_authenticated/_app/cartoes': typeof AuthenticatedAppCartoesRoute
+  '/_authenticated/_app/contas': typeof AuthenticatedAppContasRoute
   '/_authenticated/_app/inicio': typeof AuthenticatedAppInicioRoute
   '/_authenticated/_app/mais': typeof AuthenticatedAppMaisRoute
   '/_authenticated/_app/metas': typeof AuthenticatedAppMetasRoute
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/comecar'
     | '/cartoes'
+    | '/contas'
     | '/inicio'
     | '/mais'
     | '/metas'
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/comecar'
     | '/cartoes'
+    | '/contas'
     | '/inicio'
     | '/mais'
     | '/metas'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app'
     | '/_authenticated/comecar'
     | '/_authenticated/_app/cartoes'
+    | '/_authenticated/_app/contas'
     | '/_authenticated/_app/inicio'
     | '/_authenticated/_app/mais'
     | '/_authenticated/_app/metas'
@@ -188,6 +200,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCartoesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/contas': {
+      id: '/_authenticated/_app/contas'
+      path: '/contas'
+      fullPath: '/contas'
+      preLoaderRoute: typeof AuthenticatedAppContasRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/inicio': {
       id: '/_authenticated/_app/inicio'
       path: '/inicio'
@@ -221,6 +240,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppCartoesRoute: typeof AuthenticatedAppCartoesRoute
+  AuthenticatedAppContasRoute: typeof AuthenticatedAppContasRoute
   AuthenticatedAppInicioRoute: typeof AuthenticatedAppInicioRoute
   AuthenticatedAppMaisRoute: typeof AuthenticatedAppMaisRoute
   AuthenticatedAppMetasRoute: typeof AuthenticatedAppMetasRoute
@@ -229,6 +249,7 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppCartoesRoute: AuthenticatedAppCartoesRoute,
+  AuthenticatedAppContasRoute: AuthenticatedAppContasRoute,
   AuthenticatedAppInicioRoute: AuthenticatedAppInicioRoute,
   AuthenticatedAppMaisRoute: AuthenticatedAppMaisRoute,
   AuthenticatedAppMetasRoute: AuthenticatedAppMetasRoute,
