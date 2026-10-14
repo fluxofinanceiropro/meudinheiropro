@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Pencil } from "lucide-react";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { balancesQuery, transactionsQuery, goalsQuery } from "@/lib/queries";
 import { savedByGoal, progress } from "@/lib/goals";
@@ -7,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { summarizeMonth, currentMonth } from "@/lib/finance";
 import { formatBRL, toCents } from "@/lib/money";
 import { SpendingChart } from "@/components/app/SpendingChart";
+import { AdjustBalanceDialog } from "@/components/app/AdjustBalanceDialog";
 
 export const Route = createFileRoute("/_authenticated/_app/inicio")({
   head: () => ({ meta: [{ title: "Início — Meu Controle" }] }),
