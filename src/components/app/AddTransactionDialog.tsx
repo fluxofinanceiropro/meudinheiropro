@@ -49,6 +49,8 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
   const [categoryId, setCategoryId] = useState("");
   const [cardId, setCardId] = useState("");
   const [installments, setInstallments] = useState("1");
+  const [recurring, setRecurring] = useState(false);
+  const [months, setMonths] = useState("12");
 
   useEffect(() => {
     if (!open) return;
@@ -63,6 +65,8 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
     setCategoryId(editing?.category_id ?? "");
     setCardId(editing?.card_id ?? "");
     setInstallments("1");
+    setRecurring(false);
+    setMonths("12");
   }, [open, editing]);
 
   const isCredit = kind === "expense" && method === "credit_card";
@@ -94,8 +98,17 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
         card_id: isCredit ? effectiveCard : null,
       };
       const n = isCredit ? Math.min(24, Math.max(1, Number.parseInt(installments) || 1)) : 1;
+      const reps = Math.min(36, Math.max(2, Number.parseInt(months) || 12));
       if (editing) {
         const { error } = await supabase.from("transactions").update(row).eq("id", editing.id);
+        if (error) throw error;
+      } else if (recurring && kind !== "transfer" && !isCredit) {
+        const rows = Array.from({ length: reps }, (_, i) => ({
+          ...row,
+          occurred_on: shiftDateMonths(date, i),
+          status: (i === 0 ? row.status : "pending") as "paid" | "pending",
+        }));
+        const { error } = await supabase.from("transactions").insert(rows);
         if (error) throw error;
       } else if (n > 1) {
         const parts = splitInstallments(cents, n);
@@ -250,6 +263,27 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
               </span>
               <Switch checked={paid} onCheckedChange={setPaid} />
             </label>
+          )}
+
+          {kind !== "transfer" && !isCredit && !editing && (
+            <div className="space-y-3 rounded-xl border p-3">
+              <label className="flex items-center justify-between">
+                <span className="text-sm">
+                  <span className="font-medium">Fixa (repetir todo mês)</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Aluguel, luz, assinaturas — os próximos meses ficam como pendentes
+                  </span>
+                </span>
+                <Switch checked={recurring} onCheckedChange={setRecurring} />
+              </label>
+              {recurring && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="months">Por quantos meses (2 a 36)</Label>
+                  <Input id="months" type="number" min={2} max={36} value={months}
+                    onChange={(e) => setMonths(e.target.value)} />
+                </div>
+              )}
+            </div>
           )}
 
           <Button type="submit" size="lg" className="w-full" disabled={mutation.isPending}>
