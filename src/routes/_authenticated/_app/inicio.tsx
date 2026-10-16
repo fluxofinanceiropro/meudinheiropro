@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { summarizeMonth, currentMonth } from "@/lib/finance";
 import { formatBRL, toCents } from "@/lib/money";
 import { SpendingChart } from "@/components/app/SpendingChart";
+import { UpcomingBills } from "@/components/app/UpcomingBills";
 import { AdjustBalanceDialog } from "@/components/app/AdjustBalanceDialog";
 
 export const Route = createFileRoute("/_authenticated/_app/inicio")({
@@ -52,6 +53,7 @@ function Inicio() {
         <Stat label="Contas a vencer" value={m.pendingExpense} tone="text-pending" />
         <Stat label="Resultado" value={m.net} tone="text-foreground" />
       </div>
+      <UpcomingBills transactions={txs} />
       <section className="rounded-2xl bg-card p-4 shadow-soft">
         <h2 className="mb-3 font-semibold">Gastos por categoria</h2>
         <SpendingChart transactions={txs} />

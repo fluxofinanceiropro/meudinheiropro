@@ -41,3 +41,16 @@ export function currentMonth(d = new Date()): string {
 export function todayISO(d = new Date()): string {
   return `${currentMonth(d)}-${String(d.getDate()).padStart(2, "0")}`;
 }
+
+export interface UpcomingLike extends TxLike {
+  card_id: string | null;
+}
+
+/** Pending non-card expenses due up to `days` ahead of `today`, overdue included, sorted by date. */
+export function upcomingBills<T extends UpcomingLike>(txs: T[], today: string, days = 7): T[] {
+  const [y, m, d] = today.split("-").map(Number);
+  const limit = todayISO(new Date(y ?? 0, (m ?? 1) - 1, (d ?? 1) + days));
+  return txs
+    .filter((t) => t.kind === "expense" && t.status === "pending" && !t.card_id && t.occurred_on <= limit)
+    .sort((a, b) => a.occurred_on.localeCompare(b.occurred_on));
+}

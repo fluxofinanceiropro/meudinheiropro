@@ -121,6 +121,22 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const remove = useMutation({
+    mutationFn: async () => {
+      if (!editing) return;
+      const { error } = await supabase.from("transactions")
+        .update({ deleted_at: new Date().toISOString() }).eq("id", editing.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Movimentação excluída");
+      qc.invalidateQueries({ queryKey: ["transactions", workspace.id] });
+      qc.invalidateQueries({ queryKey: ["balances", workspace.id] });
+      onOpenChange(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   function submit(e: FormEvent) {
     e.preventDefault();
     mutation.mutate();
@@ -239,6 +255,13 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
           <Button type="submit" size="lg" className="w-full" disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando…" : "Salvar"}
           </Button>
+          {editing && (
+            <Button type="button" variant="ghost" className="w-full text-destructive"
+              disabled={remove.isPending}
+              onClick={() => { if (window.confirm("Excluir esta movimentação?")) remove.mutate(); }}>
+              {remove.isPending ? "Excluindo…" : "Excluir movimentação"}
+            </Button>
+          )}
         </form>
       </DialogContent>
     </Dialog>

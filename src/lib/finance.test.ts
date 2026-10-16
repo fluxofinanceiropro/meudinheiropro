@@ -25,3 +25,18 @@ describe("summarizeMonth", () => {
   it("pending expenses are separate from paid", () => expect(s.pendingExpense).toBe(50000));
   it("net is paid income minus paid expense", () => expect(s.net).toBe(282000));
 });
+
+import { upcomingBills } from "./finance";
+describe("upcomingBills", () => {
+  const base = { kind: "expense" as const, amount: 10, status: "pending" as const, card_id: null };
+  it("inclui atrasadas e até 7 dias, exclui cartão/pagas/além do prazo", () => {
+    const txs = [
+      { ...base, occurred_on: "2026-10-23" },
+      { ...base, occurred_on: "2026-10-24" },
+      { ...base, occurred_on: "2026-10-01" },
+      { ...base, occurred_on: "2026-10-18", card_id: "c" },
+      { ...base, occurred_on: "2026-10-18", status: "paid" as const },
+    ];
+    expect(upcomingBills(txs, "2026-10-16").map((t) => t.occurred_on)).toEqual(["2026-10-01", "2026-10-23"]);
+  });
+});
