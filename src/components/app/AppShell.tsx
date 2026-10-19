@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { Home, ArrowLeftRight, CreditCard, Menu, Plus, LogOut, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useWorkspace, KIND_LABEL } from "@/hooks/use-workspace";
+import { useWorkspace } from "@/hooks/use-workspace";
 import { AddTransactionDialog } from "./AddTransactionDialog";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [addOpen, setAddOpen] = useState(false);
   const [prefill, setPrefill] = useState<VoiceDraft | null>(null);
   function voiceDraft(draft: VoiceDraft) { setPrefill(draft); setAddOpen(true); }
-  const { workspace } = useWorkspace();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 

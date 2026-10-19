@@ -15,7 +15,6 @@ import { parseBRL, centsToDecimal, toCents } from "@/lib/money";
 import { todayISO, type TxKind } from "@/lib/finance";
 import { shiftDateMonths, splitInstallments } from "@/lib/cards";
 import type { VoiceDraft } from "@/lib/voice/schema";
-import { VoiceTransactionButton } from "./VoiceTransactionButton";
 
 const METHODS = [
   { v: "pix", l: "Pix" },
@@ -132,6 +131,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
       toast.success(editing ? "Movimentação atualizada" : "Movimentação adicionada");
       qc.invalidateQueries({ queryKey: ["transactions", workspace.id] });
       qc.invalidateQueries({ queryKey: ["balances", workspace.id] });
+      qc.invalidateQueries({ queryKey: ["statement-export", workspace.id] });
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -148,6 +148,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
       toast.success("Movimentação excluída");
       qc.invalidateQueries({ queryKey: ["transactions", workspace.id] });
       qc.invalidateQueries({ queryKey: ["balances", workspace.id] });
+      qc.invalidateQueries({ queryKey: ["statement-export", workspace.id] });
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),

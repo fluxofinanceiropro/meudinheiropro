@@ -52,7 +52,7 @@ export async function recordWav(): Promise<{ stop: () => Promise<File> }> {
         node.onaudioprocess = null;
         const blob = encodeWav(chunks, audioContext.sampleRate);
         await audioContext.close();
-        if (blob.size < 2048) throw new Error("Recording was empty; please record again");
+        if (blob.size < 2048 || !chunks.some((chunk) => chunk.some((sample) => Math.abs(sample) > 0.01))) throw new Error("Nenhuma fala foi detectada. Grave novamente.");
         return new File([blob], "recording.wav", { type: "audio/wav" });
       },
     };

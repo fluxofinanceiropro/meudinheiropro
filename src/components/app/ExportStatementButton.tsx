@@ -12,7 +12,7 @@ import type { Transaction } from "@/lib/queries";
 export interface ExportStatementButtonProps { filter: StatementFilter; }
 export function ExportStatementButton({ filter }: ExportStatementButtonProps) {
   const { workspace } = useWorkspace(); const [prepare, setPrepare] = useState(false);
-  const { data, isFetching, isError, error } = useQuery({
+  const { data, isFetching, isError, error, refetch } = useQuery({
     queryKey: ["statement-export", workspace.id, filter], enabled: prepare, staleTime: 0,
     queryFn: async () => {
       const rows: Transaction[] = []; let offset = 0;
@@ -33,6 +33,7 @@ export function ExportStatementButton({ filter }: ExportStatementButtonProps) {
   return <div className="flex flex-wrap items-center gap-2">
     <Button variant="outline" disabled={isFetching} onClick={() => {
       if (data && !isFetching) { void deliverFile(data.blob, `extrato-${filter.month ?? "todos"}.csv`).catch(() => toast.error("Não foi possível baixar o extrato.")); }
+      else if (isError) void refetch();
       else setPrepare(true);
     }}>{isFetching ? <LoaderCircle className="animate-spin" /> : <Download />}{data && !isFetching ? "Baixar CSV" : "Exportar CSV"}</Button>
     {data && !isFetching && <span className="text-xs text-muted-foreground">{data.count} movimentações</span>}

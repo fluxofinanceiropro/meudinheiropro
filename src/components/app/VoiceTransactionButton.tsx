@@ -30,7 +30,13 @@ export function VoiceTransactionButton({ onDraft }: VoiceTransactionButtonProps)
     setStage("idle");
   }
   useEffect(() => () => { generation.current += 1; abort.current?.abort(); if (timer.current) clearTimeout(timer.current); void recorder.current?.stop().catch(() => undefined); }, []);
-  useEffect(() => { cancel(); setOpen(false); }, [workspace.id]);
+  useEffect(() => {
+    generation.current += 1; abort.current?.abort();
+    if (timer.current) clearTimeout(timer.current);
+    const active = recorder.current; recorder.current = null;
+    if (active) void active.stop().catch(() => undefined);
+    setStage("idle"); setOpen(false);
+  }, [workspace.id]);
   async function start() {
     const current = ++generation.current; setText(""); setError(""); setStage("starting");
     try {
