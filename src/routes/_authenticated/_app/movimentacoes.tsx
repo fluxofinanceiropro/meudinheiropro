@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { currentMonth } from "@/lib/finance";
 import { shiftInvoiceKey, invoiceLabel } from "@/lib/cards";
 import { cn } from "@/lib/utils";
+import { CategoryIcon } from "@/components/app/CategoryIcon";
 import { AddTransactionDialog } from "@/components/app/AddTransactionDialog";
 import { ExportStatementButton } from "@/components/app/ExportStatementButton";
 import { matchesStatement } from "@/lib/csv";
@@ -59,12 +60,13 @@ function Movimentacoes() {
         {list.map((t) => (
           <li key={t.id}>
             <button onClick={() => setEditing(t)} className="flex w-full items-center justify-between p-4 text-left">
-              <span>
-                <span className="block font-medium">{t.description}</span>
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="rounded-xl bg-muted p-2"><CategoryIcon icon={t.categories?.icon} color={t.categories?.color} className="h-5 w-5" /></span>
+                <span className="min-w-0"><span className="block font-medium">{t.description}</span>
                 <span className="text-xs text-muted-foreground">
                   {t.occurred_on.split("-").reverse().join("/")} · {t.categories?.name ?? (t.kind === "transfer" ? "Transferência" : "Sem categoria")}
                   {t.status === "pending" && " · pendente"}
-                </span>
+                </span></span>
               </span>
               <span className={`tabular font-semibold ${t.kind === "income" ? "text-income" : t.kind === "expense" ? "text-expense" : "text-muted-foreground"}`}>
                 {t.kind === "expense" ? "−" : t.kind === "income" ? "+" : ""}{formatBRL(toCents(t.amount))}
