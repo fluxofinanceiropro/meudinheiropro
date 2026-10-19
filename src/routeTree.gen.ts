@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_app'
 import { Route as AuthenticatedComecarRouteImport } from './routes/_authenticated/comecar'
+import { Route as ApiVoiceTranscribeRouteImport } from './routes/api/voice-transcribe'
 import { Route as AuthenticatedAppCartoesRouteImport } from './routes/_authenticated/_app/cartoes'
 import { Route as AuthenticatedAppContasRouteImport } from './routes/_authenticated/_app/contas'
 import { Route as AuthenticatedAppInicioRouteImport } from './routes/_authenticated/_app/inicio'
@@ -43,6 +44,11 @@ const AuthenticatedComecarRoute = AuthenticatedComecarRouteImport.update({
   id: '/comecar',
   path: '/comecar',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiVoiceTranscribeRoute = ApiVoiceTranscribeRouteImport.update({
+  id: '/api/voice-transcribe',
+  path: '/api/voice-transcribe',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppCartoesRoute = AuthenticatedAppCartoesRouteImport.update({
   id: '/cartoes',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/comecar': typeof AuthenticatedComecarRoute
+  '/api/voice-transcribe': typeof ApiVoiceTranscribeRoute
   '/cartoes': typeof AuthenticatedAppCartoesRoute
   '/contas': typeof AuthenticatedAppContasRoute
   '/inicio': typeof AuthenticatedAppInicioRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/comecar': typeof AuthenticatedComecarRoute
+  '/api/voice-transcribe': typeof ApiVoiceTranscribeRoute
   '/cartoes': typeof AuthenticatedAppCartoesRoute
   '/contas': typeof AuthenticatedAppContasRoute
   '/inicio': typeof AuthenticatedAppInicioRoute
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/comecar': typeof AuthenticatedComecarRoute
+  '/api/voice-transcribe': typeof ApiVoiceTranscribeRoute
   '/_authenticated/_app/cartoes': typeof AuthenticatedAppCartoesRoute
   '/_authenticated/_app/contas': typeof AuthenticatedAppContasRoute
   '/_authenticated/_app/inicio': typeof AuthenticatedAppInicioRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/comecar'
+    | '/api/voice-transcribe'
     | '/cartoes'
     | '/contas'
     | '/inicio'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/comecar'
+    | '/api/voice-transcribe'
     | '/cartoes'
     | '/contas'
     | '/inicio'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/_app'
     | '/_authenticated/comecar'
+    | '/api/voice-transcribe'
     | '/_authenticated/_app/cartoes'
     | '/_authenticated/_app/contas'
     | '/_authenticated/_app/inicio'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiVoiceTranscribeRoute: typeof ApiVoiceTranscribeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/comecar'
       preLoaderRoute: typeof AuthenticatedComecarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/voice-transcribe': {
+      id: '/api/voice-transcribe'
+      path: '/api/voice-transcribe'
+      fullPath: '/api/voice-transcribe'
+      preLoaderRoute: typeof ApiVoiceTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_app/cartoes': {
       id: '/_authenticated/_app/cartoes'
@@ -276,6 +296,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiVoiceTranscribeRoute: ApiVoiceTranscribeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

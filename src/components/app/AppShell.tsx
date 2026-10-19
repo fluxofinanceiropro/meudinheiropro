@@ -7,6 +7,8 @@ import { useWorkspace, KIND_LABEL } from "@/hooks/use-workspace";
 import { AddTransactionDialog } from "./AddTransactionDialog";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { Button } from "@/components/ui/button";
+import { VoiceTransactionButton } from "./VoiceTransactionButton";
+import type { VoiceDraft } from "@/lib/voice/schema";
 
 const NAV = [
   { to: "/inicio", label: "Início", icon: Home },
@@ -17,6 +19,8 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [addOpen, setAddOpen] = useState(false);
+  const [prefill, setPrefill] = useState<VoiceDraft | null>(null);
+  function voiceDraft(draft: VoiceDraft) { setPrefill(draft); setAddOpen(true); }
   const { workspace } = useWorkspace();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -38,9 +42,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="font-display text-lg font-semibold">Meu Controle</span>
         </div>
         <WorkspaceSwitcher variant="sidebar" />
-        <Button variant="lime" className="mt-6" onClick={() => setAddOpen(true)}>
+        <Button variant="lime" className="mt-6" onClick={() => { setPrefill(null); setAddOpen(true); }}>
           <Plus /> Adicionar
         </Button>
+        <VoiceTransactionButton onDraft={voiceDraft} />
         <nav className="mt-6 flex flex-col gap-1">
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
@@ -64,7 +69,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex-1 pb-28 md:pb-10">
         <header className="flex items-center justify-between px-4 pt-5 md:hidden">
           <WorkspaceSwitcher variant="mobile" />
-          <span className="text-xs text-muted-foreground">{KIND_LABEL[workspace.kind]}</span>
+          <VoiceTransactionButton onDraft={voiceDraft} />
         </header>
         <main className="mx-auto w-full max-w-5xl px-4 py-5 md:px-8 md:py-8">{children}</main>
       </div>
@@ -80,7 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex justify-center">
             <button
               aria-label="Adicionar movimentação"
-              onClick={() => setAddOpen(true)}
+              onClick={() => { setPrefill(null); setAddOpen(true); }}
               className="-mt-6 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft ring-4 ring-background"
             >
               <Plus className="size-6" />
@@ -92,7 +97,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </nav>
 
-      <AddTransactionDialog open={addOpen} onOpenChange={setAddOpen} />
+      <AddTransactionDialog open={addOpen} onOpenChange={setAddOpen} prefill={prefill} />
     </div>
   );
 }
