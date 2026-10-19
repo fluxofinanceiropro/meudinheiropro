@@ -1,5 +1,6 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { streamText, type ModelMessage } from "ai";
+import { streamText, Output, type ModelMessage } from "ai";
+import { voiceDraftSchema } from "@/lib/voice/schema";
 
 import {
   createLovableAiGatewayRunIdFetch,
@@ -26,6 +27,7 @@ export function createResponsesCall(
     // AI SDK 6 lacks `instructions`: rename this key to `system` there.
     ...(instructions ? { instructions } : {}),
     maxRetries: 0,
+    output: Output.object({ schema: voiceDraftSchema }),
     messages,
     abortSignal: request.signal,
     providerOptions: {
