@@ -29,6 +29,13 @@
       "when": 1791889310294,
       "tag": "0003_goal_entries_account",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792436743749,
+      "tag": "0004_voice_ai_access_state",
+      "breakpoints": true
     }
   ]
 }

@@ -14,6 +14,7 @@ import { balancesQuery, cardsQuery, categoriesQuery, type Transaction } from "@/
 import { parseBRL, centsToDecimal, toCents } from "@/lib/money";
 import { todayISO, type TxKind } from "@/lib/finance";
 import { shiftDateMonths, splitInstallments } from "@/lib/cards";
+import type { VoiceDraft } from "@/lib/voice/schema";
 
 const METHODS = [
   { v: "pix", l: "Pix" },
@@ -29,9 +30,10 @@ interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   editing?: Transaction | null;
+  prefill?: VoiceDraft | null;
 }
 
-export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
+export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: Props) {
   const { workspace } = useWorkspace();
   const qc = useQueryClient();
   const { data: accounts = [] } = useQuery({ ...balancesQuery(workspace.id), enabled: open });
@@ -54,25 +56,25 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    setKind(editing?.kind ?? "expense");
-    setDescription(editing?.description ?? "");
-    setAmount(editing ? centsToDecimal(toCents(editing.amount)).replace(".", ",") : "");
-    setDate(editing?.occurred_on ?? todayISO());
-    setPaid(editing ? editing.status === "paid" : true);
-    setMethod(editing?.payment_method ?? "pix");
-    setAccountId(editing?.account_id ?? "");
+    setKind(editing?.kind ?? prefill?.kind ?? "expense");
+    setDescription(editing?.description ?? prefill?.description ?? "");
+    setAmount(editing ? centsToDecimal(toCents(editing.amount)).replace(".", ",") : prefill?.amount_cents ? centsToDecimal(prefill.amount_cents).replace(".", ",") : "");
+    setDate(editing?.occurred_on ?? prefill?.occurred_on ?? todayISO());
+    setPaid(editing ? editing.status === "paid" : prefill?.paid ?? true);
+    setMethod(editing?.payment_method ?? prefill?.payment_method ?? "pix");
+    setAccountId(editing?.account_id ?? prefill?.account_id ?? "");
     setToAccountId(editing?.to_account_id ?? "");
-    setCategoryId(editing?.category_id ?? "");
-    setCardId(editing?.card_id ?? "");
-    setInstallments("1");
+    setCategoryId(editing?.category_id ?? prefill?.category_id ?? "");
+    setCardId(editing?.card_id ?? prefill?.card_id ?? "");
+    setInstallments(String(prefill?.installments ?? 1));
     setRecurring(false);
     setMonths("12");
-  }, [open, editing]);
+  }, [open, editing, prefill]);
 
   const isCredit = kind === "expense" && method === "credit_card";
-  const effectiveCard = cardId || cards[0]?.id || "";
+  const effectiveCard = cardId || (prefill ? "" : cards[0]?.id) || "";
 
-  const effectiveAccount = accountId || accounts[0]?.account_id || "";
+  const effectiveAccount = accountId || (prefill && accounts.length !== 1 ? "" : accounts[0]?.account_id) || "";
   const kindCategories = categories.filter((c) => c.kind === kind);
 
   const mutation = useMutation({
@@ -129,6 +131,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
       toast.success(editing ? "Movimentação atualizada" : "Movimentação adicionada");
       qc.invalidateQueries({ queryKey: ["transactions", workspace.id] });
       qc.invalidateQueries({ queryKey: ["balances", workspace.id] });
+      qc.invalidateQueries({ queryKey: ["statement-export", workspace.id] });
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -145,6 +148,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
       toast.success("Movimentação excluída");
       qc.invalidateQueries({ queryKey: ["transactions", workspace.id] });
       qc.invalidateQueries({ queryKey: ["balances", workspace.id] });
+      qc.invalidateQueries({ queryKey: ["statement-export", workspace.id] });
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -161,6 +165,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
         <DialogHeader>
           <DialogTitle>{editing ? "Editar movimentação" : "Nova movimentação"}</DialogTitle>
         </DialogHeader>
+        {prefill && <p className="text-sm text-muted-foreground">Revisar movimentação</p>}
         <form onSubmit={submit} className="space-y-4">
           <Tabs value={kind} onValueChange={(v) => { setKind(v as TxKind); setCategoryId(""); }}>
             <TabsList className="grid w-full grid-cols-3">
@@ -187,7 +192,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
               <Select value={effectiveAccount} onValueChange={setAccountId}>
                 <SelectTrigger><SelectValue placeholder="Conta" /></SelectTrigger>
                 <SelectContent>
-                  {accounts.map((a) => <SelectItem key={a.account_id!} value={a.account_id!}>{a.name}</SelectItem>)}
+                  {accounts.map((a) => a.account_id ? <SelectItem key={a.account_id} value={a.account_id}>{a.name}</SelectItem> : null)}
                 </SelectContent>
               </Select>
             </div>
@@ -198,7 +203,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing }: Props) {
                   <SelectTrigger><SelectValue placeholder="Destino" /></SelectTrigger>
                   <SelectContent>
                     {accounts.filter((a) => a.account_id !== effectiveAccount).map((a) => (
-                      <SelectItem key={a.account_id!} value={a.account_id!}>{a.name}</SelectItem>
+                      a.account_id ? <SelectItem key={a.account_id} value={a.account_id}>{a.name}</SelectItem> : null
                     ))}
                   </SelectContent>
                 </Select>

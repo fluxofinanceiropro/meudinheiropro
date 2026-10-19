@@ -11,9 +11,12 @@ import { currentMonth } from "@/lib/finance";
 import { shiftInvoiceKey, invoiceLabel } from "@/lib/cards";
 import { cn } from "@/lib/utils";
 import { AddTransactionDialog } from "@/components/app/AddTransactionDialog";
+import { ExportStatementButton } from "@/components/app/ExportStatementButton";
+import { matchesStatement } from "@/lib/csv";
+import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/_authenticated/_app/movimentacoes")({
-  head: () => ({ meta: [{ title: "Movimentações — Meu Controle" }] }),
+  head: () => pageMeta("Movimentações", "Consulte, filtre e exporte suas entradas, saídas e transferências no Meu Controle."),
   component: Movimentacoes,
 });
 
@@ -24,15 +27,14 @@ function Movimentacoes() {
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [month, setMonth] = useState<string | null>(currentMonth());
   const [kind, setKind] = useState<"all" | Transaction["kind"]>("all");
-  const list = txs.filter((t) =>
-    t.description.toLowerCase().includes(q.toLowerCase()) &&
-    (!month || t.occurred_on.startsWith(month)) &&
-    (kind === "all" || t.kind === kind));
+  const filter = { search: q, month, kind };
+  const list = txs.filter((t) => matchesStatement(t, filter));
   const kinds = [["all", "Todas"], ["expense", "Saídas"], ["income", "Entradas"], ["transfer", "Transf."]] as const;
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Movimentações</h1>
+      <ExportStatementButton key={`${workspace.id}-${q}-${month}-${kind}`} filter={filter} />
       <Input placeholder="Pesquisar" value={q} onChange={(e) => setQ(e.target.value)} />
       <div className="flex items-center justify-between rounded-2xl bg-card p-2 shadow-soft">
         <Button variant="ghost" size="icon" aria-label="Mês anterior" disabled={!month}
