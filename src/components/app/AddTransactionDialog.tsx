@@ -53,6 +53,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
   const [installments, setInstallments] = useState("1");
   const [recurring, setRecurring] = useState(false);
   const [months, setMonths] = useState("12");
+  const [scope, setScope] = useState<"single" | "future" | "all">("single");
 
   useEffect(() => {
     if (!open) return;
@@ -69,6 +70,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
     setInstallments(String(prefill?.installments ?? 1));
     setRecurring(false);
     setMonths("12");
+    setScope("single");
   }, [open, editing, prefill]);
 
   const isCredit = kind === "expense" && method === "credit_card";
@@ -102,11 +104,32 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
       const n = isCredit ? Math.min(24, Math.max(1, Number.parseInt(installments) || 1)) : 1;
       const reps = Math.min(36, Math.max(2, Number.parseInt(months) || 12));
       if (editing) {
-        const { error } = await supabase.from("transactions").update(row).eq("id", editing.id);
+        // Cascade edits must preserve individual occurrence dates and payment statuses.
+        // Date/status can only change for one occurrence.
+        const shared = {
+          kind: row.kind, description: row.description, amount: row.amount,
+          payment_method: row.payment_method, account_id: row.account_id,
+          to_account_id: row.to_account_id, category_id: row.category_id, card_id: row.card_id,
+        };
+        const change = scope === "single" || !editing.recurring_series_id
+          ? { ...row }
+          : shared;
+        let query = supabase.from("transactions").update(change)
+          .eq("workspace_id", workspace.id).is("deleted_at", null);
+        if (scope !== "single" && editing.recurring_series_id) {
+          query = query.eq("recurring_series_id", editing.recurring_series_id);
+          if (scope === "future") query = query.gte("occurred_on", editing.occurred_on);
+        } else {
+          query = query.eq("id", editing.id);
+        }
+        const { data: updated, error } = await query.select("id");
         if (error) throw error;
+        if (!updated?.length) throw new Error("Nenhum lançamento foi alterado. Verifique suas permissões.");
       } else if (recurring && kind !== "transfer" && !isCredit) {
+        const seriesId = crypto.randomUUID();
         const rows = Array.from({ length: reps }, (_, i) => ({
           ...row,
+          recurring_series_id: seriesId,
           occurred_on: shiftDateMonths(date, i),
           status: (i === 0 ? row.status : "pending") as "paid" | "pending",
         }));
@@ -140,9 +163,18 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
   const remove = useMutation({
     mutationFn: async () => {
       if (!editing) return;
-      const { error } = await supabase.from("transactions")
-        .update({ deleted_at: new Date().toISOString() }).eq("id", editing.id);
+      let query = supabase.from("transactions")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("workspace_id", workspace.id).is("deleted_at", null);
+      if (scope !== "single" && editing.recurring_series_id) {
+        query = query.eq("recurring_series_id", editing.recurring_series_id);
+        if (scope === "future") query = query.gte("occurred_on", editing.occurred_on);
+      } else {
+        query = query.eq("id", editing.id);
+      }
+      const { data: removed, error } = await query.select("id");
       if (error) throw error;
+      if (!removed?.length) throw new Error("Nenhum lançamento foi excluído. Verifique suas permissões.");
     },
     onSuccess: () => {
       toast.success("Movimentação excluída");
@@ -291,13 +323,36 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
             </div>
           )}
 
+          {editing?.recurring_series_id && (
+            <div className="space-y-2 rounded-xl border p-3">
+              <Label htmlFor="recurring-scope">Aplicar alterações à despesa ou receita fixa</Label>
+              <Select value={scope} onValueChange={(value) => setScope(value as "single" | "future" | "all")}>
+                <SelectTrigger id="recurring-scope"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="single">Apenas esta</SelectItem>
+                  <SelectItem value="future">Esta e futuras</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
+                </SelectContent>
+              </Select>
+              {scope !== "single" && (
+                <p className="text-xs text-muted-foreground">
+                  A edição em grupo altera valor, descrição, categoria e conta. Datas e situação de pagamento das outras ocorrências serão mantidas.
+                </p>
+              )}
+            </div>
+          )}
           <Button type="submit" size="lg" className="w-full" disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando…" : "Salvar"}
           </Button>
           {editing && (
             <Button type="button" variant="ghost" className="w-full text-destructive"
               disabled={remove.isPending}
-              onClick={() => { if (window.confirm("Excluir esta movimentação?")) remove.mutate(); }}>
+              onClick={() => {
+                const label = scope === "all" && editing.recurring_series_id ? "TODAS as ocorrências da série"
+                  : scope === "future" && editing.recurring_series_id ? "esta e todas as ocorrências futuras"
+                  : "somente esta movimentação";
+                if (window.confirm(`Excluir ${label}? Esta ação altera seus saldos.`)) remove.mutate();
+              }}>
               {remove.isPending ? "Excluindo…" : "Excluir movimentação"}
             </Button>
           )}
