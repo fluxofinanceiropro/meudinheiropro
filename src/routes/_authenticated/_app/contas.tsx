@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { CategoryIcon, CATEGORY_COLORS, CATEGORY_ICONS } from "@/components/app/CategoryIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { balancesQuery, categoriesQuery } from "@/lib/queries";
@@ -27,7 +28,7 @@ export const ACCOUNT_KIND_LABEL: Record<string, string> = {
 };
 
 interface AccountForm { id?: string | undefined; name: string; kind: string; initial: string }
-interface CategoryForm { id?: string; name: string; kind: "expense" | "income" }
+interface CategoryForm { id?: string; name: string; kind: "expense" | "income"; icon: string; color: string }
 
 function ContasPage() {
   const { workspace } = useWorkspace();
@@ -43,6 +44,7 @@ function ContasPage() {
     qc.invalidateQueries({ queryKey: ["balances", ws] });
     qc.invalidateQueries({ queryKey: ["categories", ws] });
     qc.invalidateQueries({ queryKey: ["transactions", ws] });
+    qc.invalidateQueries({ queryKey: ["statement-export", ws] });
   };
 
   async function saveAccount() {
@@ -91,8 +93,8 @@ function ContasPage() {
     }
     setSaving(true);
     const { error } = cat.id
-      ? await supabase.from("categories").update({ name }).eq("id", cat.id)
-      : await supabase.from("categories").insert({ name, kind: cat.kind, workspace_id: ws });
+      ? await supabase.from("categories").update({ name, icon: cat.icon, color: cat.color }).eq("id", cat.id)
+      : await supabase.from("categories").insert({ name, kind: cat.kind, icon: cat.icon, color: cat.color, workspace_id: ws });
     setSaving(false);
     if (error) {
       toast.error(error.message);
@@ -116,12 +118,12 @@ function ContasPage() {
 
   const catList = (kind: "expense" | "income") => (
     <div className="space-y-2">
-      <Button size="sm" onClick={() => setCat({ name: "", kind })}><Plus className="mr-1 h-4 w-4" />Nova categoria</Button>
+      <Button size="sm" onClick={() => setCat({ name: "", kind, icon: "circle", color: kind === "income" ? "#63a46c" : "#dc645b" })}><Plus className="mr-1 h-4 w-4" />Nova categoria</Button>
       <ul className="divide-y rounded-xl border bg-card">
         {(categories.data ?? []).filter((c) => c.kind === kind).map((c) => (
           <li key={c.id} className="flex items-center gap-2 px-4 py-3">
-            <span className="flex-1">{c.name}</span>
-            <Button variant="ghost" size="icon" aria-label={`Editar ${c.name}`} onClick={() => setCat({ id: c.id, name: c.name, kind })}><Pencil className="h-4 w-4" /></Button>
+            <span className="flex flex-1 items-center gap-2"><span className="rounded-lg p-2" style={{ backgroundColor: `${c.color || "#738094"}20` }}><CategoryIcon icon={c.icon} color={c.color} /></span>{c.name}</span>
+            <Button variant="ghost" size="icon" aria-label={`Editar ${c.name}`} onClick={() => setCat({ id: c.id, name: c.name, kind, icon: c.icon ?? "circle", color: c.color ?? "#738094" })}><Pencil className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon" aria-label={`Remover ${c.name}`} onClick={() => removeCategory(c.id, c.name)}><Trash2 className="h-4 w-4" /></Button>
           </li>
         ))}
@@ -180,7 +182,16 @@ function ContasPage() {
       <Dialog open={!!cat} onOpenChange={(o) => !o && setCat(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>{cat?.id ? "Editar categoria" : `Nova categoria de ${cat?.kind === "income" ? "entrada" : "saída"}`}</DialogTitle></DialogHeader>
-          {cat && <div className="space-y-1"><Label htmlFor="cat-name">Nome</Label><Input id="cat-name" value={cat.name} onChange={(e) => setCat({ ...cat, name: e.target.value })} /></div>}
+          {cat && <div className="space-y-4">
+            <div className="space-y-1"><Label htmlFor="cat-name">Nome</Label><Input id="cat-name" value={cat.name} onChange={(e) => setCat({ ...cat, name: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Ícone</Label><div className="grid max-h-36 grid-cols-8 gap-2 overflow-y-auto">
+              {Object.keys(CATEGORY_ICONS).map((key) => <button key={key} type="button" title={key} aria-label={`Ícone ${key}`} aria-pressed={cat.icon === key} onClick={() => setCat({ ...cat, icon: key })} className={`flex h-9 items-center justify-center rounded-lg border ${cat.icon === key ? "border-primary bg-accent" : ""}`}><CategoryIcon icon={key} color={cat.color} /></button>)}
+            </div></div>
+            <div className="space-y-2"><Label>Cor</Label><div className="flex flex-wrap gap-2">
+              {CATEGORY_COLORS.map((color) => <button key={color} type="button" title={color} aria-label={`Cor ${color}`} aria-pressed={cat.color === color} onClick={() => setCat({ ...cat, color })} className={`h-8 w-8 rounded-full border-2 ${cat.color === color ? "ring-2 ring-primary ring-offset-2" : ""}`} style={{ backgroundColor: color }} />)}
+              <input type="color" aria-label="Escolher outra cor" value={cat.color} onChange={(e) => setCat({ ...cat, color: e.target.value })} className="h-8 w-10 cursor-pointer" />
+            </div></div>
+          </div>}
           <DialogFooter><Button onClick={saveCategory} disabled={saving}>Salvar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
