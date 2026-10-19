@@ -6,6 +6,7 @@ import { shiftInvoiceKey, invoiceLabel } from "@/lib/cards";
 import { formatBRL, toCents } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CategoryIcon } from "@/components/app/CategoryIcon";
 
 const COLORS = [
   "var(--color-chart-1)",
@@ -19,26 +20,28 @@ interface Slice {
   name: string;
   value: number;
   color: string;
+  icon: string | null;
 }
 
 export function SpendingChart({ transactions }: { transactions: Transaction[] }) {
   const [month, setMonth] = useState(currentMonth);
   const slices = useMemo<Slice[]>(() => {
-    const byCat = new Map<string, number>();
+    const byCat = new Map<string, { value: number; color: string | null; icon: string | null }>();
     for (const t of transactions) {
       if (t.kind !== "expense" || t.status !== "paid") continue;
       if (!t.occurred_on.startsWith(month)) continue;
       const name = t.categories?.name ?? "Sem categoria";
-      byCat.set(name, (byCat.get(name) ?? 0) + toCents(t.amount));
+      const prev = byCat.get(name);
+      byCat.set(name, { value: (prev?.value ?? 0) + toCents(t.amount), color: t.categories?.color ?? null, icon: t.categories?.icon ?? null });
     }
-    const sorted = [...byCat.entries()].sort((a, b) => b[1] - a[1]);
+    const sorted = [...byCat.entries()].sort((a, b) => b[1].value - a[1].value);
     const top = sorted.slice(0, 4);
-    const rest = sorted.slice(4).reduce((s, [, v]) => s + v, 0);
-    const rows = rest > 0 ? [...top, ["Outras", rest] as [string, number]] : top;
-    return rows.map(([name, value], i) => ({
-      name,
-      value,
-      color: COLORS[i % COLORS.length] ?? COLORS[0]!,
+    const rest = sorted.slice(4).reduce((s, [, v]) => s + v.value, 0);
+    const rows = rest > 0 ? [...top, ["Outras", { value: rest, color: null, icon: null }] as [string, { value: number; color: string | null; icon: string | null }]] : top;
+    return rows.map(([name, category], i) => ({
+      name, value: category.value,
+      color: category.color && /^#[0-9a-fA-F]{6}$/.test(category.color) ? category.color : COLORS[i % COLORS.length]!,
+      icon: category.icon,
     }));
   }, [transactions, month]);
 
@@ -105,6 +108,7 @@ export function SpendingChart({ transactions }: { transactions: Transaction[] })
               className="h-2.5 w-2.5 shrink-0 rounded-full"
               style={{ backgroundColor: s.color }}
             />
+            <CategoryIcon icon={s.icon} color={s.color} />
             <span className="min-w-0 flex-1 truncate">{s.name}</span>
             <span className="tabular font-medium">{formatBRL(s.value)}</span>
             <span className="w-10 text-right text-xs tabular text-muted-foreground">
