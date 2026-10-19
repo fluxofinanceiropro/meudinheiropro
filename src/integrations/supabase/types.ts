@@ -105,6 +105,8 @@ export type Database = {
           deleted_at: string | null
           id: string
           kind: string
+          icon: string | null
+          color: string | null
           name: string
           updated_at: string
           workspace_id: string
@@ -114,6 +116,8 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           kind: string
+          icon?: string | null
+          color?: string | null
           name: string
           updated_at?: string
           workspace_id: string
@@ -123,6 +127,8 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           kind?: string
+          icon?: string | null
+          color?: string | null
           name?: string
           updated_at?: string
           workspace_id?: string
