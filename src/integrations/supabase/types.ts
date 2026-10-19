@@ -290,6 +290,7 @@ export type Database = {
           kind: string
           occurred_on: string
           payment_method: string | null
+          recurring_series_id: string | null
           status: string
           to_account_id: string | null
           updated_at: string
@@ -308,6 +309,7 @@ export type Database = {
           kind: string
           occurred_on?: string
           payment_method?: string | null
+          recurring_series_id?: string | null
           status?: string
           to_account_id?: string | null
           updated_at?: string

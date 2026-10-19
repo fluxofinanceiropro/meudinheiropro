@@ -70,7 +70,7 @@ export const transactionsQuery = (ws: string) =>
       const { data, error } = await supabase
         .from("transactions")
         .select(
-          "id,kind,description,amount,occurred_on,status,payment_method,account_id,to_account_id,category_id,card_id,categories(name)",
+          "id,kind,description,amount,occurred_on,status,payment_method,account_id,to_account_id,category_id,card_id,recurring_series_id,categories(name)",
         )
         .eq("workspace_id", ws)
         .is("deleted_at", null)
@@ -84,6 +84,7 @@ export const transactionsQuery = (ws: string) =>
 
 export interface Transaction {
   id: string;
+  recurring_series_id: string | null;
   kind: "income" | "expense" | "transfer";
   description: string;
   amount: number;
