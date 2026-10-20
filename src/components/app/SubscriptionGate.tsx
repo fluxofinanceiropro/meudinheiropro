@@ -1,16 +1,29 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { CreditCard, LockKeyhole, Copy } from "lucide-react";
+import { CreditCard, LockKeyhole, Copy, MessageCircle, Clock3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 const PIX_KEY = "62109951000150";
+const WHATSAPP = "5537996620552";
+const paymentMessage = encodeURIComponent("Olá! Solicito a conferência do pagamento mensal de R$ 9,90 do Meu Dinheiro Pro. Enviarei o comprovante nesta conversa.");
+export const PAYMENT_WHATSAPP_URL = `https://wa.me/${WHATSAPP}?text=${paymentMessage}`;
+export function formatRemaining(target: string, now: number) {
+  const seconds = Math.max(0, Math.ceil((new Date(target).getTime() - now) / 1000));
+  const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), sec = seconds % 60;
+  return [h, m, sec].map(x => String(x).padStart(2, "0")).join(":");
+}
 type Status = { status: "trial" | "active" | "expired"; trial_ends_at: string; paid_until: string | null };
 
 export function SubscriptionGate({ workspaceId, children }: { workspaceId: string; children: React.ReactNode }) {
   const qc = useQueryClient();
   const [sending, setSending] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
   const access = useQuery({
     queryKey: ["subscription", workspaceId],
     queryFn: async (): Promise<Status> => {
@@ -40,7 +53,16 @@ export function SubscriptionGate({ workspaceId, children }: { workspaceId: strin
 
   if (access.isPending) return <p className="p-8 text-center text-muted-foreground">Verificando assinatura…</p>;
   if (access.isError) return <div className="mx-auto max-w-lg space-y-3 p-8"><p role="alert">Não foi possível verificar sua assinatura. Nenhum dado foi alterado.</p><Button onClick={() => access.refetch()}>Tentar novamente</Button></div>;
-  if (access.data.status !== "expired") return <>{children}</>;
+  const isTrial = access.data.status === "trial" && new Date(access.data.trial_ends_at).getTime() > now;
+  if (access.data.status === "active") return <>{children}</>;
+  if (isTrial) return <>
+    <div className="sticky top-0 z-20 flex flex-wrap items-center justify-center gap-2 border-b bg-amber-50 px-3 py-2 text-center text-sm text-amber-950">
+      <Clock3 className="h-4 w-4" aria-hidden="true" />
+      <span>Seu teste grátis termina em <strong className="tabular-nums">{formatRemaining(access.data.trial_ends_at, now)}</strong></span>
+      <span className="text-xs">R$ 9,90/30 dias após o teste</span>
+    </div>
+    {children}
+  </>;
 
   return <div className="mx-auto max-w-lg space-y-5 p-6">
     <div className="flex items-center gap-3"><LockKeyhole className="h-8 w-8 text-primary" /><div><h1 className="text-2xl font-bold">Seu teste de 24 horas terminou</h1><p className="text-muted-foreground">Seus dados estão salvos. Assine para continuar utilizando seu espaço financeiro.</p></div></div>
@@ -53,8 +75,11 @@ export function SubscriptionGate({ workspaceId, children }: { workspaceId: strin
         <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(PIX_KEY); toast.success("Chave Pix copiada!"); } catch { toast.error("Copie o CNPJ manualmente."); } }}><Copy className="mr-2 h-4 w-4" />Copiar</Button>
       </div>
       <p className="text-sm">Faça o Pix de <strong>R$ 9,90</strong> para o CNPJ acima. Confira o nome do recebedor no seu banco antes de pagar.</p>
+      <a href={PAYMENT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-accent">
+        <MessageCircle className="h-4 w-4" />Enviar comprovante pelo WhatsApp · (37) 99662-0552
+      </a>
       <Button className="w-full" onClick={() => void requestPayment()} disabled={sending}><CreditCard className="mr-2 h-4 w-4" />{sending ? "Registrando…" : "Já paguei — solicitar conferência"}</Button>
-      <p className="text-xs text-muted-foreground">O acesso será liberado somente após a confirmação manual do recebimento. Este botão não confirma o pagamento.</p>
+      <p className="text-xs text-muted-foreground">O acesso por mais 30 dias só será liberado após você conferir o Pix e confirmar no painel administrativo. Este botão não confirma o pagamento.</p>
       <Button variant="outline" className="w-full" onClick={() => qc.invalidateQueries({ queryKey: ["subscription", workspaceId] })}>Verificar liberação</Button>
     </div>
   </div>;
