@@ -16,7 +16,7 @@ type Customer = {
   trial_ends_at: string; paid_until: string | null;
   workspace_count: number; pending_payments: number; legacy_access: boolean;
 };
-type Payment = { id: string; owner_id: string; name: string; email: string; amount: number; created_at: string; status: string };
+type Payment = { id: string; owner_id: string; name: string; email: string; amount: number; plan_code: string; created_at: string; status: string };
 const formatDate = (value?: string | null) => value ? new Date(value).toLocaleString("pt-BR") : "—";
 
 function AdminPage() {
@@ -49,12 +49,12 @@ function AdminPage() {
     },
   });
   async function confirm(payment: Payment) {
-    if (!window.confirm(`Você conferiu o recebimento real de R$ 9,90 no banco? Liberar 30 dias para ${payment.email}?`)) return;
+    if (!window.confirm(`Você conferiu o recebimento real de R$ ${Number(payment.amount).toFixed(2).replace(".", ",")} no banco? Liberar ${payment.plan_code === "annual" ? "1 ano" : "30 dias"} para ${payment.email}?`)) return;
     setBusy(payment.id);
     try {
       const { error } = await supabase.rpc("admin_confirm_pix", { _request_id: payment.id });
       if (error) throw error;
-      toast.success("Pagamento confirmado e 30 dias liberados.");
+      toast.success("Pagamento confirmado e período contratado liberado.");
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["saas-admin-payments"] }),
         qc.invalidateQueries({ queryKey: ["saas-admin-customers"] }),
@@ -78,7 +78,7 @@ function AdminPage() {
       {payments.isError && <p role="alert" className="text-destructive">{payments.error.message}</p>}
       {payments.isPending && <p>Carregando…</p>}
       {payments.data?.length===0 && <p className="text-sm text-muted-foreground">Nenhum pagamento pendente.</p>}
-      <ul className="divide-y">{payments.data?.map(payment=><li key={payment.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-medium">{payment.name} · R$ {Number(payment.amount).toFixed(2).replace(".",",")}</p><p className="text-xs text-muted-foreground">{payment.email} · {formatDate(payment.created_at)}</p></div><Button disabled={busy!==null} onClick={()=>void confirm(payment)}>{busy===payment.id?"Confirmando…":"Confirmar Pix recebido"}</Button></li>)}</ul>
+      <ul className="divide-y">{payments.data?.map(payment=><li key={payment.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-medium">{payment.name} · {payment.plan_code === "annual" ? "Anual" : "Mensal"} · R$ {Number(payment.amount).toFixed(2).replace(".",",")}</p><p className="text-xs text-muted-foreground">{payment.email} · {formatDate(payment.created_at)}</p></div><Button disabled={busy!==null} onClick={()=>void confirm(payment)}>{busy===payment.id?"Confirmando…":"Confirmar Pix recebido"}</Button></li>)}</ul>
     </section>
     <section className="space-y-3 rounded-2xl border bg-card p-4"><h2 className="text-lg font-semibold">Clientes cadastrados</h2>
       {customers.isError && <p role="alert" className="text-destructive">{customers.error.message}</p>}
