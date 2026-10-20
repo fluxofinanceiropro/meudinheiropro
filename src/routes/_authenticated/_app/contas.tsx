@@ -13,9 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CategoryIcon } from "@/components/app/CategoryIcon";
+import { CategoryAppearancePicker } from "@/components/app/CategoryAppearancePicker";
+import { categoryPayload, categoryIcon, categoryColor, isCategoryColor } from "@/lib/categories";
+import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/_authenticated/_app/contas")({
-  head: () => ({ meta: [{ title: "Contas e categorias — Meu Controle" }] }),
+  head: () => pageMeta("Contas e categorias", "Gerencie suas contas e personalize categorias de entradas e saídas com cores e ícones."),
   component: ContasPage,
 });
 
@@ -27,7 +31,7 @@ export const ACCOUNT_KIND_LABEL: Record<string, string> = {
 };
 
 interface AccountForm { id?: string | undefined; name: string; kind: string; initial: string }
-interface CategoryForm { id?: string; name: string; kind: "expense" | "income" }
+interface CategoryForm { id?: string; name: string; kind: "expense" | "income"; icon: string; color: string }
 
 function ContasPage() {
   const { workspace } = useWorkspace();
@@ -43,6 +47,7 @@ function ContasPage() {
     qc.invalidateQueries({ queryKey: ["balances", ws] });
     qc.invalidateQueries({ queryKey: ["categories", ws] });
     qc.invalidateQueries({ queryKey: ["transactions", ws] });
+    qc.invalidateQueries({ queryKey: ["statement-export", ws] });
   };
 
   async function saveAccount() {
@@ -89,18 +94,25 @@ function ContasPage() {
       toast.error("Informe o nome da categoria");
       return;
     }
-    setSaving(true);
-    const { error } = cat.id
-      ? await supabase.from("categories").update({ name }).eq("id", cat.id)
-      : await supabase.from("categories").insert({ name, kind: cat.kind, workspace_id: ws });
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
+    if (!isCategoryColor(cat.color)) {
+      toast.error("Informe uma cor válida no formato #RRGGBB");
       return;
     }
-    toast.success(cat.id ? "Categoria atualizada" : "Categoria criada");
-    setCat(null);
-    refresh();
+    const row = categoryPayload(name, cat);
+    setSaving(true);
+    try {
+      const { error } = cat.id
+        ? await supabase.from("categories").update(row).eq("id", cat.id).eq("workspace_id", ws)
+        : await supabase.from("categories").insert({ ...row, kind: cat.kind, workspace_id: ws });
+      if (error) throw error;
+      toast.success(cat.id ? "Categoria atualizada" : "Categoria criada");
+      setCat(null);
+      refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível salvar a categoria");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function removeCategory(id: string, name: string) {
@@ -116,12 +128,15 @@ function ContasPage() {
 
   const catList = (kind: "expense" | "income") => (
     <div className="space-y-2">
-      <Button size="sm" onClick={() => setCat({ name: "", kind })}><Plus className="mr-1 h-4 w-4" />Nova categoria</Button>
+      <Button size="sm" onClick={() => setCat({ name: "", kind, icon: "circle", color: categoryColor() })}><Plus className="mr-1 h-4 w-4" />Nova categoria</Button>
+      {categories.isLoading && <p role="status" className="text-sm text-muted-foreground">Carregando categorias…</p>}
+      {categories.isError && <p role="alert" className="text-sm text-destructive">Não foi possível carregar as categorias.</p>}
       <ul className="divide-y rounded-xl border bg-card">
         {(categories.data ?? []).filter((c) => c.kind === kind).map((c) => (
           <li key={c.id} className="flex items-center gap-2 px-4 py-3">
-            <span className="flex-1">{c.name}</span>
-            <Button variant="ghost" size="icon" aria-label={`Editar ${c.name}`} onClick={() => setCat({ id: c.id, name: c.name, kind })}><Pencil className="h-4 w-4" /></Button>
+            <CategoryIcon category={c} />
+            <span className="min-w-0 flex-1 break-words">{c.name}</span>
+            <Button variant="ghost" size="icon" aria-label={`Editar ${c.name}`} onClick={() => setCat({ id: c.id, name: c.name, kind, icon: categoryIcon(c.icon), color: categoryColor(c.color) })}><Pencil className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon" aria-label={`Remover ${c.name}`} onClick={() => removeCategory(c.id, c.name)}><Trash2 className="h-4 w-4" /></Button>
           </li>
         ))}
@@ -177,11 +192,14 @@ function ContasPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!cat} onOpenChange={(o) => !o && setCat(null)}>
-        <DialogContent>
+      <Dialog open={!!cat} onOpenChange={(o) => !o && !saving && setCat(null)}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto">
           <DialogHeader><DialogTitle>{cat?.id ? "Editar categoria" : `Nova categoria de ${cat?.kind === "income" ? "entrada" : "saída"}`}</DialogTitle></DialogHeader>
-          {cat && <div className="space-y-1"><Label htmlFor="cat-name">Nome</Label><Input id="cat-name" value={cat.name} onChange={(e) => setCat({ ...cat, name: e.target.value })} /></div>}
-          <DialogFooter><Button onClick={saveCategory} disabled={saving}>Salvar</Button></DialogFooter>
+          {cat && <div className="space-y-4">
+            <div className="space-y-1"><Label htmlFor="cat-name">Nome</Label><Input id="cat-name" disabled={saving} value={cat.name} onChange={(e) => setCat({ ...cat, name: e.target.value })} /></div>
+            <CategoryAppearancePicker name={cat.name} icon={cat.icon} color={cat.color} disabled={saving} onChange={(visual) => setCat({ ...cat, icon: categoryIcon(visual.icon), color: visual.color ?? categoryColor() })} />
+          </div>}
+          <DialogFooter><Button onClick={saveCategory} disabled={saving}>{saving ? "Salvando…" : "Salvar"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

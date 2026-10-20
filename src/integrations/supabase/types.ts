@@ -101,8 +101,10 @@ export type Database = {
       }
       categories: {
         Row: {
+          color: string | null
           created_at: string
           deleted_at: string | null
+          icon: string | null
           id: string
           kind: string
           name: string
@@ -110,8 +112,10 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          color?: string | null
           created_at?: string
           deleted_at?: string | null
+          icon?: string | null
           id?: string
           kind: string
           name: string
@@ -119,8 +123,10 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          color?: string | null
           created_at?: string
           deleted_at?: string | null
+          icon?: string | null
           id?: string
           kind?: string
           name?: string
@@ -290,6 +296,7 @@ export type Database = {
           kind: string
           occurred_on: string
           payment_method: string | null
+          recurring_series_id: string | null
           status: string
           to_account_id: string | null
           updated_at: string
@@ -308,6 +315,7 @@ export type Database = {
           kind: string
           occurred_on?: string
           payment_method?: string | null
+          recurring_series_id?: string | null
           status?: string
           to_account_id?: string | null
           updated_at?: string
@@ -326,6 +334,7 @@ export type Database = {
           kind?: string
           occurred_on?: string
           payment_method?: string | null
+          recurring_series_id?: string | null
           status?: string
           to_account_id?: string | null
           updated_at?: string

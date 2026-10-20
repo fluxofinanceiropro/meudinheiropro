@@ -11,9 +11,10 @@ import { formatBRL, toCents } from "@/lib/money";
 import { SpendingChart } from "@/components/app/SpendingChart";
 import { UpcomingBills } from "@/components/app/UpcomingBills";
 import { AdjustBalanceDialog } from "@/components/app/AdjustBalanceDialog";
+import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/_authenticated/_app/inicio")({
-  head: () => ({ meta: [{ title: "Início — Meu Controle" }] }),
+  head: () => pageMeta("Início", "Acompanhe seus saldos, contas a vencer, metas e gastos por categoria no Meu Controle."),
   component: Inicio,
 });
 

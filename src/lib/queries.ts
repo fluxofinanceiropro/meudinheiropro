@@ -54,7 +54,7 @@ export const categoriesQuery = (ws: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id,name,kind")
+        .select("id,name,kind,icon,color")
         .eq("workspace_id", ws)
         .is("deleted_at", null)
         .order("name");
@@ -70,7 +70,7 @@ export const transactionsQuery = (ws: string) =>
       const { data, error } = await supabase
         .from("transactions")
         .select(
-          "id,kind,description,amount,occurred_on,status,payment_method,account_id,to_account_id,category_id,card_id,categories(name)",
+          "id,kind,description,amount,occurred_on,status,payment_method,account_id,to_account_id,category_id,card_id,categories(name,icon,color)",
         )
         .eq("workspace_id", ws)
         .is("deleted_at", null)
@@ -94,7 +94,7 @@ export interface Transaction {
   to_account_id: string | null;
   category_id: string | null;
   card_id: string | null;
-  categories: { name: string } | null;
+  categories: { name: string; icon?: string | null; color?: string | null } | null;
 }
 
 export const goalsQuery = (ws: string) =>

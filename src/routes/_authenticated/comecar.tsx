@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { parseBRL, centsToDecimal } from "@/lib/money";
 import { WS_STORAGE_KEY } from "@/hooks/use-workspace";
 import { cn } from "@/lib/utils";
+import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/_authenticated/comecar")({
-  head: () => ({ meta: [{ title: "Novo espaço — Meu Controle" }] }),
+  head: () => pageMeta("Novo espaço", "Crie um espaço para organizar contas, categorias e movimentações financeiras no Meu Controle."),
   component: Onboarding,
 });
 

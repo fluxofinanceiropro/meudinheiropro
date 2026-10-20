@@ -17,9 +17,10 @@ import {
 import { formatBRL, toCents } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 import { AddCardDialog } from "@/components/app/AddCardDialog";
+import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/_authenticated/_app/cartoes")({
-  head: () => ({ meta: [{ title: "Cartões — Meu Controle" }] }),
+  head: () => pageMeta("Cartões", "Gerencie seus cartões de crédito e acompanhe compras, faturas e vencimentos no Meu Controle."),
   component: Cartoes,
 });
 
