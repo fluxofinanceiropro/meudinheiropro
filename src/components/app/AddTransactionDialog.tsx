@@ -102,8 +102,9 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
       const n = isCredit ? Math.min(24, Math.max(1, Number.parseInt(installments) || 1)) : 1;
       const reps = Math.min(36, Math.max(2, Number.parseInt(months) || 12));
       if (editing) {
-        const { error } = await supabase.from("transactions").update(row).eq("id", editing.id);
+        const { data, error } = await supabase.from("transactions").update(row).eq("id", editing.id).eq("workspace_id", workspace.id).is("deleted_at", null).select("id");
         if (error) throw error;
+        if (!data?.length) throw new Error("Não foi possível editar. Confira sua permissão neste espaço.");
       } else if (recurring && kind !== "transfer" && !isCredit) {
         const rows = Array.from({ length: reps }, (_, i) => ({
           ...row,
@@ -140,9 +141,10 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
   const remove = useMutation({
     mutationFn: async () => {
       if (!editing) return;
-      const { error } = await supabase.from("transactions")
-        .update({ deleted_at: new Date().toISOString() }).eq("id", editing.id);
+      const { data, error } = await supabase.from("transactions")
+        .update({ deleted_at: new Date().toISOString() }).eq("id", editing.id).eq("workspace_id", workspace.id).is("deleted_at", null).select("id");
       if (error) throw error;
+      if (!data?.length) throw new Error("Não foi possível excluir. Confira sua permissão neste espaço.");
     },
     onSuccess: () => {
       toast.success("Movimentação excluída");
@@ -163,7 +165,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto rounded-2xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{editing ? "Editar movimentação" : "Nova movimentação"}</DialogTitle>
+          <DialogTitle>{editing ? "Editar ou excluir movimentação" : "Nova movimentação"}</DialogTitle>
         </DialogHeader>
         {prefill && <p className="text-sm text-muted-foreground">Revisar movimentação</p>}
         <form onSubmit={submit} className="space-y-4">
@@ -291,12 +293,12 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
             </div>
           )}
 
-          <Button type="submit" size="lg" className="w-full" disabled={mutation.isPending}>
+          <Button type="submit" size="lg" className="w-full" disabled={mutation.isPending || remove.isPending}>
             {mutation.isPending ? "Salvando…" : "Salvar"}
           </Button>
           {editing && (
             <Button type="button" variant="ghost" className="w-full text-destructive"
-              disabled={remove.isPending}
+              disabled={remove.isPending || mutation.isPending}
               onClick={() => { if (window.confirm("Excluir esta movimentação?")) remove.mutate(); }}>
               {remove.isPending ? "Excluindo…" : "Excluir movimentação"}
             </Button>

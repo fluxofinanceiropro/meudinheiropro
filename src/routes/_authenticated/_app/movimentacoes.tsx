@@ -6,7 +6,7 @@ import { transactionsQuery, type Transaction } from "@/lib/queries";
 import { formatBRL, toCents } from "@/lib/money";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { currentMonth } from "@/lib/finance";
 import { shiftInvoiceKey, invoiceLabel } from "@/lib/cards";
 import { cn } from "@/lib/utils";
@@ -58,8 +58,8 @@ function Movimentacoes() {
       {!isLoading && list.length === 0 && <p className="text-muted-foreground">Nenhuma movimentação encontrada.</p>}
       <ul className="divide-y rounded-2xl bg-card shadow-soft">
         {list.map((t) => (
-          <li key={t.id}>
-             <button onClick={() => setEditing(t)} className="flex w-full items-center justify-between gap-3 p-4 text-left">
+          <li key={t.id} className="flex items-center gap-1 pr-3">
+             <button type="button" aria-label={`Editar ${t.description}`} onClick={() => setEditing(t)} className="flex min-w-0 flex-1 items-center justify-between gap-3 p-4 text-left">
                {t.kind !== "transfer" && <CategoryIcon category={t.categories} />}
                <span className="min-w-0 flex-1">
                  <span className="block break-words font-medium">{t.description}</span>
@@ -72,10 +72,11 @@ function Movimentacoes() {
                 {t.kind === "expense" ? "−" : t.kind === "income" ? "+" : ""}{formatBRL(toCents(t.amount))}
               </span>
             </button>
+            <Button type="button" variant="outline" size="sm" aria-label={`Editar ou excluir ${t.description}`} onClick={() => setEditing(t)} className="shrink-0"><Pencil className="mr-1 h-4 w-4" />Editar</Button>
           </li>
         ))}
       </ul>
-      <AddTransactionDialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)} editing={editing} />
+      <AddTransactionDialog key={`${workspace.id}-${editing?.id ?? "none"}`} open={!!editing} onOpenChange={(o) => !o && setEditing(null)} editing={editing} />
     </div>
   );
 }
