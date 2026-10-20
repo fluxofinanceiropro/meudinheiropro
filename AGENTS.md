@@ -14,3 +14,5 @@
 - Persist provider access denials per user and AI surface, with privileged server writes only, to prevent automatic replay after reloads.
 - CSV exports paginate all matching workspace transactions rather than the display's 500-row cache, and escape spreadsheet formulas.
 - Leaf page metadata uses the shared pageMeta helper for consistent unique social and description tags.
+- Category visuals use the shared categories normalization module and CategoryIcon renderer; stored custom colors are validated data, not theme overrides, and legacy values receive safe fallbacks.
+- Spending chart groups by category ID, preserves the top-four plus Other aggregation, and derives slice and legend visuals from the same normalized records to prevent mismatches.

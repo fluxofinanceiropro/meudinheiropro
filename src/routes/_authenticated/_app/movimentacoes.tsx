@@ -14,6 +14,7 @@ import { AddTransactionDialog } from "@/components/app/AddTransactionDialog";
 import { ExportStatementButton } from "@/components/app/ExportStatementButton";
 import { matchesStatement } from "@/lib/csv";
 import { pageMeta } from "@/lib/page-meta";
+import { CategoryIcon } from "@/components/app/CategoryIcon";
 
 export const Route = createFileRoute("/_authenticated/_app/movimentacoes")({
   head: () => pageMeta("Movimentações", "Consulte, filtre e exporte suas entradas, saídas e transferências no Meu Controle."),
@@ -58,9 +59,10 @@ function Movimentacoes() {
       <ul className="divide-y rounded-2xl bg-card shadow-soft">
         {list.map((t) => (
           <li key={t.id}>
-            <button onClick={() => setEditing(t)} className="flex w-full items-center justify-between p-4 text-left">
-              <span>
-                <span className="block font-medium">{t.description}</span>
+             <button onClick={() => setEditing(t)} className="flex w-full items-center justify-between gap-3 p-4 text-left">
+               {t.kind !== "transfer" && <CategoryIcon category={t.categories} />}
+               <span className="min-w-0 flex-1">
+                 <span className="block break-words font-medium">{t.description}</span>
                 <span className="text-xs text-muted-foreground">
                   {t.occurred_on.split("-").reverse().join("/")} · {t.categories?.name ?? (t.kind === "transfer" ? "Transferência" : "Sem categoria")}
                   {t.status === "pending" && " · pendente"}
