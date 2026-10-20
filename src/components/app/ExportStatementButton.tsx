@@ -20,6 +20,8 @@ export function ExportStatementButton({ filter }: ExportStatementButtonProps) {
         let query = supabase.from("transactions").select("id,kind,description,amount,occurred_on,status,payment_method,account_id,to_account_id,category_id,card_id,categories(name)")
           .eq("workspace_id", workspace.id).is("deleted_at", null).order("occurred_on", { ascending: false }).order("id").range(offset, offset + 499);
         if (filter.month) { const [y, m] = filter.month.split("-").map(Number); const next = new Date(y ?? 0, m ?? 1, 1); const end = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-01`; query = query.gte("occurred_on", `${filter.month}-01`).lt("occurred_on", end); }
+        if (filter.startDate) query = query.gte("occurred_on", filter.startDate);
+        if (filter.endDate) query = query.lte("occurred_on", filter.endDate);
         if (filter.kind !== "all") query = query.eq("kind", filter.kind);
         const result = await query; if (result.error) throw result.error;
         const page = result.data as Transaction[]; rows.push(...page.filter((t) => matchesStatement(t, filter)));
@@ -32,7 +34,7 @@ export function ExportStatementButton({ filter }: ExportStatementButtonProps) {
   });
   return <div className="flex flex-wrap items-center gap-2">
     <Button variant="outline" disabled={isFetching} onClick={() => {
-      if (data && !isFetching) { void deliverFile(data.blob, `extrato-${filter.month ?? "todos"}.csv`).catch(() => toast.error("Não foi possível baixar o extrato.")); }
+      if (data && !isFetching) { void deliverFile(data.blob, `extrato-${filter.month ?? (filter.startDate ? `${filter.startDate}-a-${filter.endDate ?? "hoje"}` : "todos")}.csv`).catch(() => toast.error("Não foi possível baixar o extrato.")); }
       else if (isError) void refetch();
       else setPrepare(true);
     }}>{isFetching ? <LoaderCircle className="animate-spin" /> : <Download />}{data && !isFetching ? "Baixar CSV" : "Exportar CSV"}</Button>
