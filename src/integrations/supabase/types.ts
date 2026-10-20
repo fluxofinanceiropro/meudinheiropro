@@ -539,6 +539,17 @@ export type Database = {
       }
     }
     Functions: {
+      is_saas_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      admin_saas_overview: { Args: Record<PropertyKey, never>; Returns: {
+        owner_id: string; name: string; email: string; subscription_status: string;
+        trial_ends_at: string; paid_until: string | null; workspace_count: number;
+        pending_payments: number; legacy_access: boolean
+      }[] }
+      admin_pending_payments: { Args: Record<PropertyKey, never>; Returns: {
+        id: string; owner_id: string; name: string; email: string;
+        amount: number; created_at: string; status: string
+      }[] }
+      admin_confirm_pix: { Args: { _request_id: string }; Returns: string }
       my_saas_status: { Args: { _workspace: string }; Returns: { status: string; trial_ends_at: string; paid_until: string | null }[] }
       can_edit_workspace: { Args: { _ws: string }; Returns: boolean }
       create_workspace: {
