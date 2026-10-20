@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 
 const PIX_KEY = "62109951000150";
 const WHATSAPP = "5537996620552";
-const paymentMessage = encodeURIComponent("Olá! Solicito a conferência do pagamento mensal de R$ 9,90 do Meu Dinheiro Pro. Enviarei o comprovante nesta conversa.");
-export const PAYMENT_WHATSAPP_URL = `https://wa.me/${WHATSAPP}?text=${paymentMessage}`;
+const plans = { monthly: { label: "Mensal", amount: 9.90, period: "30 dias" }, annual: { label: "Anual", amount: 97, period: "1 ano" } } as const;
+type PlanKey = keyof typeof plans;
+const money = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const receiptUrl = (plan: PlanKey) => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Olá! Quero enviar o comprovante do plano ${plans[plan].label} de ${money(plans[plan].amount)} do Meu Dinheiro Pro.`)}`;
 export function formatRemaining(target: string, now: number) {
   const seconds = Math.max(0, Math.ceil((new Date(target).getTime() - now) / 1000));
   const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), sec = seconds % 60;
@@ -19,6 +21,7 @@ type Status = { status: "trial" | "active" | "expired"; trial_ends_at: string; p
 export function SubscriptionGate({ workspaceId, children }: { workspaceId: string; children: React.ReactNode }) {
   const qc = useQueryClient();
   const [sending, setSending] = useState(false);
+  const [plan, setPlan] = useState<PlanKey>("monthly");
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
@@ -43,7 +46,7 @@ export function SubscriptionGate({ workspaceId, children }: { workspaceId: strin
     try {
       const { data: auth, error: authError } = await supabase.auth.getUser();
       if (authError || !auth.user) throw authError || new Error("Faça login novamente.");
-      const { error } = await supabase.from("saas_payment_requests").insert({ owner_id: auth.user.id });
+      const { error } = await supabase.from("saas_payment_requests").insert({ owner_id: auth.user.id, plan_code: plan, amount: plans[plan].amount });
       if (error && error.code !== "23505") throw error;
       toast.success("Solicitação registrada! Após pagar, aguarde a confirmação.");
     } catch (err) {
@@ -67,15 +70,21 @@ export function SubscriptionGate({ workspaceId, children }: { workspaceId: strin
   return <div className="mx-auto max-w-lg space-y-5 p-6">
     <div className="flex items-center gap-3"><LockKeyhole className="h-8 w-8 text-primary" /><div><h1 className="text-2xl font-bold">Seu teste de 24 horas terminou</h1><p className="text-muted-foreground">Seus dados estão salvos. Assine para continuar utilizando seu espaço financeiro.</p></div></div>
     <div className="space-y-4 rounded-2xl border bg-card p-5">
-      <p className="font-semibold">Meu Dinheiro Pro — Plano mensal</p>
-      <p className="text-3xl font-bold">R$ 9,90 <span className="text-sm font-normal text-muted-foreground">/ 30 dias</span></p>
+      <p className="font-semibold">Escolha seu plano</p>
+      <div className="grid grid-cols-2 gap-2">
+        {(Object.keys(plans) as PlanKey[]).map(key => <button key={key} type="button" aria-pressed={plan === key} onClick={() => setPlan(key)} className={`rounded-xl border p-3 text-left ${plan === key ? "border-primary bg-primary/10" : ""}`}>
+          <span className="block text-sm font-medium">{plans[key].label}</span>
+          <strong className="block text-xl">{money(plans[key].amount)}</strong>
+          <span className="text-xs text-muted-foreground">{plans[key].period}</span>
+        </button>)}
+      </div>
       <p className="text-sm text-muted-foreground">Pagamento via Pix — chave CNPJ</p>
       <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted p-3">
         <code className="font-semibold">{PIX_KEY}</code>
         <Button size="sm" variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(PIX_KEY); toast.success("Chave Pix copiada!"); } catch { toast.error("Copie o CNPJ manualmente."); } }}><Copy className="mr-2 h-4 w-4" />Copiar</Button>
       </div>
-      <p className="text-sm">Faça o Pix de <strong>R$ 9,90</strong> para o CNPJ acima. Confira o nome do recebedor no seu banco antes de pagar.</p>
-      <a href={PAYMENT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-accent">
+      <p className="text-sm">Faça o Pix de <strong>{money(plans[plan].amount)}</strong> para o CNPJ acima. Confira o nome do recebedor no seu banco antes de pagar.</p>
+      <a href={receiptUrl(plan)} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-accent">
         <MessageCircle className="h-4 w-4" />Enviar comprovante pelo WhatsApp · (37) 99662-0552
       </a>
       <Button className="w-full" onClick={() => void requestPayment()} disabled={sending}><CreditCard className="mr-2 h-4 w-4" />{sending ? "Registrando…" : "Já paguei — solicitar conferência"}</Button>
