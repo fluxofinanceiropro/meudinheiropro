@@ -14,6 +14,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      saas_payment_requests: {
+        Row: { id: string; owner_id: string; amount: number; status: string; created_at: string; confirmed_at: string | null }
+        Insert: { id?: string; owner_id: string; amount?: number; status?: string; created_at?: string; confirmed_at?: string | null }
+        Update: { id?: string; owner_id?: string; amount?: number; status?: string; created_at?: string; confirmed_at?: string | null }
+        Relationships: []
+      }
       accounts: {
         Row: {
           created_at: string
@@ -533,6 +539,7 @@ export type Database = {
       }
     }
     Functions: {
+      my_saas_status: { Args: { _workspace: string }; Returns: { status: string; trial_ends_at: string; paid_until: string | null }[] }
       can_edit_workspace: { Args: { _ws: string }; Returns: boolean }
       create_workspace: {
         Args: {
