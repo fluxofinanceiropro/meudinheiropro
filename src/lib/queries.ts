@@ -9,7 +9,7 @@ export const workspacesQuery = () =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("workspaces")
-        .select("id,name,kind,icon,color")
+        .select("id,name,kind")
         .is("deleted_at", null)
         .order("created_at");
       if (error) throw error;
@@ -54,7 +54,7 @@ export const categoriesQuery = (ws: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id,name,kind")
+        .select("id,name,kind,icon,color")
         .eq("workspace_id", ws)
         .is("deleted_at", null)
         .order("name");

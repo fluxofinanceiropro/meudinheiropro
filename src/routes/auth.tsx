@@ -14,6 +14,8 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Entre ou crie sua conta no Meu Controle." },
       { property: "og:title", content: "Entrar — Meu Controle" },
       { property: "og:description", content: "Entre ou crie sua conta no Meu Controle." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AuthPage,

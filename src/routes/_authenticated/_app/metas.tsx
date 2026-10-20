@@ -13,9 +13,10 @@ import { todayISO } from "@/lib/finance";
 import { savedByGoal, progress, monthlyNeeded, type Goal } from "@/lib/goals";
 import { GoalDialog } from "@/components/app/GoalDialog";
 import { GoalEntryDialog } from "@/components/app/GoalEntryDialog";
+import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/_authenticated/_app/metas")({
-  head: () => ({ meta: [{ title: "Reserva e metas — Meu Controle" }] }),
+  head: () => pageMeta("Reserva e metas", "Acompanhe suas reservas, defina metas financeiras e registre aportes no Meu Controle."),
   component: Metas,
 });
 

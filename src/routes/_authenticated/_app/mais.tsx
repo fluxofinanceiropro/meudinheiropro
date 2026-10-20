@@ -2,9 +2,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { pageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/_authenticated/_app/mais")({
-  head: () => ({ meta: [{ title: "Mais — Meu Controle" }] }),
+  head: () => pageMeta("Mais", "Acesse suas contas, categorias, metas e opções do espaço financeiro no Meu Controle."),
   component: Mais,
 });
 
