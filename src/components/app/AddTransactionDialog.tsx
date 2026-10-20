@@ -15,6 +15,8 @@ import { parseBRL, centsToDecimal, toCents } from "@/lib/money";
 import { todayISO, type TxKind } from "@/lib/finance";
 import { shiftDateMonths, splitInstallments } from "@/lib/cards";
 import type { VoiceDraft } from "@/lib/voice/schema";
+import { profileQuery } from "./ProfileSettings";
+import { formatBRL } from "@/lib/money";
 
 const METHODS = [
   { v: "pix", l: "Pix" },
@@ -39,6 +41,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
   const { data: accounts = [] } = useQuery({ ...balancesQuery(workspace.id), enabled: open });
   const { data: categories = [] } = useQuery({ ...categoriesQuery(workspace.id), enabled: open });
   const { data: cards = [] } = useQuery({ ...cardsQuery(workspace.id), enabled: open });
+  const { data: profile } = useQuery({ ...profileQuery(), enabled: open });
 
   const [kind, setKind] = useState<TxKind>("expense");
   const [description, setDescription] = useState("");
@@ -53,6 +56,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
   const [installments, setInstallments] = useState("1");
   const [recurring, setRecurring] = useState(false);
   const [months, setMonths] = useState("12");
+  const [putInReserve, setPutInReserve] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -69,6 +73,7 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
     setInstallments(String(prefill?.installments ?? 1));
     setRecurring(false);
     setMonths("12");
+    setPutInReserve(false);
   }, [open, editing, prefill]);
 
   const isCredit = kind === "expense" && method === "credit_card";
@@ -124,14 +129,22 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
         const { error } = await supabase.from("transactions").insert(rows);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("transactions").insert(row);
+        const { data: inserted, error } = await supabase.from("transactions").insert(row).select("id").single();
         if (error) throw error;
+        if (putInReserve && kind === "income" && paid) {
+          const { error: reserveError } = await supabase.rpc("allocate_income_reserve", { _transaction_id: inserted.id });
+          if (reserveError) {
+            toast.warning("Entrada salva, mas a reserva não foi registrada: " + reserveError.message);
+            return;
+          }
+        }
       }
     },
     onSuccess: () => {
       toast.success(editing ? "Movimentação atualizada" : "Movimentação adicionada");
       qc.invalidateQueries({ queryKey: ["transactions", workspace.id] });
       qc.invalidateQueries({ queryKey: ["balances", workspace.id] });
+      qc.invalidateQueries({ queryKey: ["goals", workspace.id] });
       qc.invalidateQueries({ queryKey: ["statement-export", workspace.id] });
       onOpenChange(false);
     },
@@ -293,6 +306,13 @@ export function AddTransactionDialog({ open, onOpenChange, editing, prefill }: P
             </div>
           )}
 
+          {!editing && kind === "income" && paid && !recurring && profile?.reservePrompt && (
+            <label className="flex items-center justify-between gap-3 rounded-xl border p-3">
+              <span className="text-sm"><span className="block font-medium">Separar 10% para o fundo de reserva?</span>
+              <span className="block text-xs text-muted-foreground">Reservar {formatBRL(Math.round((parseBRL(amount) || 0) * 0.1))} nesta entrada. Não transfere dinheiro entre bancos.</span></span>
+              <Switch checked={putInReserve} onCheckedChange={setPutInReserve} />
+            </label>
+          )}
           <Button type="submit" size="lg" className="w-full" disabled={mutation.isPending || remove.isPending}>
             {mutation.isPending ? "Salvando…" : "Salvar"}
           </Button>
