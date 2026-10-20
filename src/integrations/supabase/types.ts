@@ -151,6 +151,7 @@ export type Database = {
           created_by: string
           deleted_at: string | null
           goal_id: string
+          source_transaction_id: string | null
           id: string
           note: string | null
           occurred_on: string
@@ -164,6 +165,7 @@ export type Database = {
           created_by?: string
           deleted_at?: string | null
           goal_id: string
+          source_transaction_id?: string | null
           id?: string
           note?: string | null
           occurred_on?: string
@@ -177,6 +179,7 @@ export type Database = {
           created_by?: string
           deleted_at?: string | null
           goal_id?: string
+          source_transaction_id?: string | null
           id?: string
           note?: string | null
           occurred_on?: string
@@ -262,6 +265,7 @@ export type Database = {
         Row: {
           created_at: string
           currency: string
+          reserve_prompt_enabled: boolean
           full_name: string | null
           avatar_url: string | null
           id: string
@@ -533,6 +537,7 @@ export type Database = {
       }
     }
     Functions: {
+      allocate_income_reserve: { Args: { _transaction_id: string }; Returns: string }
       can_edit_workspace: { Args: { _ws: string }; Returns: boolean }
       create_workspace: {
         Args: {

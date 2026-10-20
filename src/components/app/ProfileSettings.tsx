@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 const BUCKET = "profile-photos";
 export const profileQuery = () => ({
@@ -14,9 +15,9 @@ export const profileQuery = () => ({
     const { data: auth, error: authError } = await supabase.auth.getUser();
     if (authError) throw authError;
     if (!auth.user) throw new Error("Faça login novamente.");
-    const { data, error } = await supabase.from("profiles").select("full_name,avatar_url").eq("id", auth.user.id).maybeSingle();
+    const { data, error } = await supabase.from("profiles").select("full_name,avatar_url,reserve_prompt_enabled").eq("id", auth.user.id).maybeSingle();
     if (error) throw error;
-    return { id: auth.user.id, email: auth.user.email || "", name: data?.full_name || auth.user.user_metadata?.full_name || "", avatar: data?.avatar_url || "" };
+    return { id: auth.user.id, email: auth.user.email || "", name: data?.full_name || auth.user.user_metadata?.full_name || "", avatar: data?.avatar_url || "", reservePrompt: data?.reserve_prompt_enabled ?? false };
   },
   staleTime: 60_000,
 });
@@ -32,6 +33,15 @@ export function ProfileSettings() {
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   useEffect(() => { if (data) setName(data.name); }, [data]);
+
+  async function setReservePrompt(enabled: boolean) {
+    if (!data) return;
+    const { error, data: saved } = await supabase.from("profiles")
+      .upsert({ id: data.id, reserve_prompt_enabled: enabled }, { onConflict: "id" }).select("id");
+    if (error || !saved?.length) { toast.error(error?.message || "Não foi possível alterar esta configuração."); return; }
+    await qc.invalidateQueries({ queryKey: ["my-profile"] });
+    toast.success(enabled ? "Pergunta de reserva ativada" : "Pergunta de reserva desativada");
+  }
 
   async function saveName() {
     if (!data) return;
@@ -96,6 +106,11 @@ export function ProfileSettings() {
       <div className="space-y-1.5">
         <Label>E-mail da conta</Label>
         <p className="text-sm text-muted-foreground">{data.email}</p>
+      </div>
+      <div className="flex items-center justify-between gap-3 rounded-xl border p-3">
+        <div><Label htmlFor="reserve-prompt">Sugerir fundo de reserva</Label>
+        <p className="mt-1 text-xs text-muted-foreground">Perguntar se deseja guardar 10% quando registrar uma entrada recebida. Você decide a cada lançamento.</p></div>
+        <Switch id="reserve-prompt" checked={data.reservePrompt} onCheckedChange={(checked) => void setReservePrompt(checked)} />
       </div>
       <Button onClick={() => void saveName()} disabled={saving || name.trim() === data.name}>
         {saving ? <><LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Salvando…</> : "Salvar nome"}
