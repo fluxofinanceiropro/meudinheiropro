@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -54,6 +55,7 @@ function Onboarding() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <form onSubmit={submit} className="w-full max-w-md space-y-5 rounded-3xl bg-card p-6 shadow-soft">
+        <Button type="button" size="sm" variant="ghost" asChild><Link to="/mais"><ArrowLeft className="mr-2 h-4 w-4" />Voltar para Mais</Link></Button>
         <h1 className="text-2xl font-semibold">Crie seu espaço financeiro</h1>
         <div className="grid grid-cols-3 gap-2">
           {KINDS.map((k) => (
