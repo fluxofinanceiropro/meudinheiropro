@@ -29,7 +29,7 @@ function Reports() {
     <div className="rounded-2xl bg-card p-4 shadow-soft"><p className="text-sm text-muted-foreground">Resultado</p><p className="font-display text-xl font-semibold">{formatBRL(summary.net)}</p></div>
    </div>
    <section className="rounded-2xl bg-card p-4 shadow-soft"><h2 className="mb-3 font-semibold">Gastos por categoria</h2><SpendingChart transactions={transactions}/></section>
-   <p className="text-xs text-muted-foreground">Os cálculos consideram os lançamentos carregados no sistema (até 500 mais recentes). Para períodos mais antigos, consulte Movimentações e exporte o CSV.</p>
+   <p className="text-xs text-muted-foreground">Os totais consideram todo o histórico de movimentações deste espaço financeiro.</p>
   </>}
  </div>;
 }
