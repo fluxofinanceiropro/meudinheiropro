@@ -15,8 +15,8 @@ export type Database = {
   public: {
     Tables: {
       saas_payment_requests: {
-        Row: { id: string; owner_id: string; amount: number; status: string; created_at: string; confirmed_at: string | null }
-        Insert: { id?: string; owner_id: string; amount?: number; status?: string; created_at?: string; confirmed_at?: string | null }
+        Row: { id: string; owner_id: string; amount: number; plan_code: string; status: string; created_at: string; confirmed_at: string | null }
+        Insert: { id?: string; owner_id: string; amount?: number; plan_code?: string; status?: string; created_at?: string; confirmed_at?: string | null }
         Update: { id?: string; owner_id?: string; amount?: number; status?: string; created_at?: string; confirmed_at?: string | null }
         Relationships: []
       }
@@ -547,7 +547,7 @@ export type Database = {
       }[] }
       admin_pending_payments: { Args: Record<PropertyKey, never>; Returns: {
         id: string; owner_id: string; name: string; email: string;
-        amount: number; created_at: string; status: string
+        amount: number; plan_code: string; created_at: string; status: string
       }[] }
       admin_confirm_pix: { Args: { _request_id: string }; Returns: string }
       my_saas_status: { Args: { _workspace: string }; Returns: { status: string; trial_ends_at: string; paid_until: string | null }[] }
