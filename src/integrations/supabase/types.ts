@@ -537,6 +537,7 @@ export type Database = {
       }
     }
     Functions: {
+      adjust_workspace_balances: { Args: { _workspace: string; _changes: Json }; Returns: number }
       allocate_income_reserve: { Args: { _transaction_id: string }; Returns: string }
       can_edit_workspace: { Args: { _ws: string }; Returns: boolean }
       create_workspace: {
