@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChartNoAxesCombined } from "lucide-react";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { transactionsQuery } from "@/lib/queries";
-import { formatBRL, toCents } from "@/lib/money";
+import { formatBRL } from "@/lib/money";
 import { currentMonth, summarizeMonth } from "@/lib/finance";
 import { SpendingChart } from "@/components/app/SpendingChart";
 import { Button } from "@/components/ui/button";
