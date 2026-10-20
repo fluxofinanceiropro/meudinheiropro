@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { PiggyBank, Plus, Pencil, Trash2, Target } from "lucide-react";
@@ -41,6 +42,7 @@ function Metas() {
 
   return (
     <div className="space-y-5">
+      <Button variant="ghost" size="sm" asChild><Link to="/mais"><ArrowLeft className="mr-2 h-4 w-4" />Voltar para Mais</Link></Button>
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Reserva e metas</h1>
