@@ -8,6 +8,8 @@ import { AddTransactionDialog } from "./AddTransactionDialog";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { Button } from "@/components/ui/button";
 import { VoiceTransactionButton } from "./VoiceTransactionButton";
+import { ProfileAvatar, profileQuery } from "./ProfileSettings";
+import { useQuery } from "@tanstack/react-query";
 import type { VoiceDraft } from "@/lib/voice/schema";
 
 const NAV = [
@@ -23,6 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   function voiceDraft(draft: VoiceDraft) { setPrefill(draft); setAddOpen(true); }
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { data: profile } = useQuery(profileQuery());
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -40,6 +43,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <span className="font-display text-lg font-semibold">Meu Controle</span>
         </div>
+        <Link to="/mais" className="mb-4 flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-sidebar-accent" aria-label="Editar meu perfil">
+          <ProfileAvatar /><span className="min-w-0"><span className="block truncate text-sm font-semibold">{profile?.name || "Meu perfil"}</span><span className="block text-xs opacity-65">Editar meu perfil</span></span>
+        </Link>
         <WorkspaceSwitcher variant="sidebar" />
         <Button variant="lime" className="mt-6" onClick={() => { setPrefill(null); setAddOpen(true); }}>
           <Plus /> Adicionar
@@ -68,6 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex-1 pb-28 md:pb-10">
         <header className="flex items-center justify-between px-4 pt-5 md:hidden">
           <WorkspaceSwitcher variant="mobile" />
+          <Link to="/mais" aria-label="Abrir meu perfil"><ProfileAvatar size="h-9 w-9" /></Link>
           <VoiceTransactionButton onDraft={voiceDraft} />
         </header>
         <main className="mx-auto w-full max-w-5xl px-4 py-5 md:px-8 md:py-8">{children}</main>

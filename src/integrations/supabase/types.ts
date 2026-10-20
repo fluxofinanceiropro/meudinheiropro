@@ -263,6 +263,7 @@ export type Database = {
           created_at: string
           currency: string
           full_name: string | null
+          avatar_url: string | null
           id: string
           updated_at: string
         }
@@ -270,6 +271,7 @@ export type Database = {
           created_at?: string
           currency?: string
           full_name?: string | null
+          avatar_url?: string | null
           id: string
           updated_at?: string
         }

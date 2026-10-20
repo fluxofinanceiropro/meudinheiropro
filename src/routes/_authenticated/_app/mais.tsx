@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { pageMeta } from "@/lib/page-meta";
+import { ProfileSettings } from "@/components/app/ProfileSettings";
 
 export const Route = createFileRoute("/_authenticated/_app/mais")({
   head: () => pageMeta("Mais", "Acesse suas contas, categorias, metas e opções do espaço financeiro no Meu Controle."),
@@ -21,6 +22,7 @@ function Mais() {
   return (
     <div className="space-y-3">
       <h1 className="text-2xl font-semibold">Mais</h1>
+      <ProfileSettings />
       <Button variant="outline" className="w-full" asChild><Link to="/metas">Reserva e metas</Link></Button>
       <Button variant="outline" className="w-full" asChild><Link to="/contas">Contas e categorias</Link></Button>
       <Button variant="outline" className="w-full" asChild><Link to="/comecar">Novo espaço financeiro</Link></Button>
