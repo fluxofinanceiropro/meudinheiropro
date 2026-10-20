@@ -43,14 +43,14 @@ revoke all on function public.admin_saas_overview() from public;
 grant execute on function public.admin_saas_overview() to authenticated;
 
 create or replace function public.admin_pending_payments()
-returns table(id uuid, owner_id uuid, name text, email text, amount numeric,
+returns table(id uuid, owner_id uuid, name text, email text, amount numeric, plan_code text,
               created_at timestamptz, status text)
 language plpgsql security definer set search_path=public as $$
 begin
  if not public.is_saas_admin() then raise exception 'Acesso negado'; end if;
  return query
  select r.id, r.owner_id, coalesce(p.full_name,'Cliente')::text,
-        coalesce(u.email,'')::text, r.amount, r.created_at, r.status
+        coalesce(u.email,'')::text, r.amount, r.plan_code, r.created_at, r.status
  from public.saas_payment_requests r
  join auth.users u on u.id=r.owner_id
  left join public.profiles p on p.id=r.owner_id
@@ -61,14 +61,14 @@ grant execute on function public.admin_pending_payments() to authenticated;
 
 create or replace function public.admin_confirm_pix(_request_id uuid)
 returns timestamptz language plpgsql security definer set search_path=public as $$
-declare requester uuid; paid timestamptz;
+declare requester uuid; paid timestamptz; request_plan text;
 begin
  if not public.is_saas_admin() then raise exception 'Acesso negado'; end if;
- select owner_id into requester from public.saas_payment_requests
+ select owner_id, plan_code into requester, request_plan from public.saas_payment_requests
  where id=_request_id and status='pending' for update;
  if requester is null then raise exception 'Cobrança já processada ou inexistente'; end if;
  update public.saas_subscriptions s
- set paid_until=greatest(now(),coalesce(s.paid_until,now()))+interval '30 days'
+ set paid_until=case when request_plan='annual' then greatest(now(),coalesce(s.paid_until,now()))+interval '1 year' else greatest(now(),coalesce(s.paid_until,now()))+interval '30 days' end
  where s.owner_id=requester returning s.paid_until into paid;
  if paid is null then raise exception 'Assinatura não encontrada'; end if;
  update public.saas_payment_requests set status='confirmed',confirmed_at=now()
