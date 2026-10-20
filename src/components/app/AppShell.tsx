@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import { Home, ArrowLeftRight, CreditCard, Menu, Plus, LogOut, Wallet } from "lucide-react";
+import { Home, ArrowLeftRight, CreditCard, Menu, Plus, LogOut, Wallet, PiggyBank, ChartNoAxesCombined, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { AddTransactionDialog } from "./AddTransactionDialog";
@@ -17,6 +17,12 @@ const NAV = [
   { to: "/movimentacoes", label: "Movimentações", icon: ArrowLeftRight },
   { to: "/cartoes", label: "Cartões", icon: CreditCard },
   { to: "/mais", label: "Mais", icon: Menu },
+] as const;
+const DESKTOP_NAV = [
+  ...NAV.slice(0, 3),
+  { to: "/metas", label: "Reserva e metas", icon: PiggyBank },
+  { to: "/relatorios", label: "Relatórios", icon: ChartNoAxesCombined },
+  { to: "/mais", label: "Mais / Configurações", icon: Menu },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -52,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Button>
         <VoiceTransactionButton onDraft={voiceDraft} />
         <nav className="mt-6 flex flex-col gap-1">
-          {NAV.map(({ to, label, icon: Icon }) => (
+          {DESKTOP_NAV.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}
@@ -63,6 +69,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
+        <Link to="/assinatura" className="mt-auto flex items-center gap-3 rounded-xl border border-sidebar-foreground/20 px-3 py-3 text-sm text-sidebar-foreground hover:bg-sidebar-accent"><Crown className="size-4"/> Minha assinatura</Link>
         <button
           onClick={signOut}
           className="mt-auto flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent"
