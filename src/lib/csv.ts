@@ -1,10 +1,22 @@
 import type { Transaction } from "./queries";
 import { centsToDecimal, toCents } from "./money";
 
-export interface StatementFilter { search: string; month: string | null; kind: "all" | Transaction["kind"]; }
+export interface StatementFilter {
+  search: string;
+  month: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  kind: "all" | Transaction["kind"];
+}
 export function matchesStatement(t: Transaction, filter: StatementFilter): boolean {
-  return t.description.toLocaleLowerCase("pt-BR").includes(filter.search.toLocaleLowerCase("pt-BR")) &&
-    (!filter.month || t.occurred_on.startsWith(filter.month)) && (filter.kind === "all" || t.kind === filter.kind);
+  const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
+  const needle = normalize(filter.search.trim());
+  const haystack = normalize([t.description, t.categories?.name ?? ""].join(" "));
+  return haystack.includes(needle) &&
+    (!filter.month || t.occurred_on.startsWith(filter.month)) &&
+    (!filter.startDate || t.occurred_on >= filter.startDate) &&
+    (!filter.endDate || t.occurred_on <= filter.endDate) &&
+    (filter.kind === "all" || t.kind === filter.kind);
 }
 function cell(value: string): string {
   const safe = /^[\s]*[=+\-@]/.test(value) || /^[\t\r\n]/.test(value) ? `'${value}` : value;
