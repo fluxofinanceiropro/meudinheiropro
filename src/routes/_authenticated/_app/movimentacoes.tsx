@@ -6,8 +6,8 @@ import { transactionsQuery, type Transaction } from "@/lib/queries";
 import { formatBRL, toCents } from "@/lib/money";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
-import { currentMonth } from "@/lib/finance";
+import { ChevronLeft, ChevronRight, Pencil, Search, X } from "lucide-react";
+import { currentMonth, todayISO } from "@/lib/finance";
 import { shiftInvoiceKey, invoiceLabel } from "@/lib/cards";
 import { cn } from "@/lib/utils";
 import { AddTransactionDialog } from "@/components/app/AddTransactionDialog";
@@ -26,25 +26,59 @@ function Movimentacoes() {
   const { data: txs = [], isLoading } = useQuery(transactionsQuery(workspace.id));
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Transaction | null>(null);
-  const [month, setMonth] = useState<string | null>(currentMonth());
+  const [period, setPeriod] = useState<"today" | "week" | "month" | "all" | "custom">("month");
+  const [month, setMonth] = useState<string>(currentMonth());
+  const [from, setFrom] = useState(todayISO());
+  const [to, setTo] = useState(todayISO());
   const [kind, setKind] = useState<"all" | Transaction["kind"]>("all");
-  const filter = { search: q, month, kind };
-  const list = txs.filter((t) => matchesStatement(t, filter));
+  const today = todayISO();
+  const dayStart = new Date(today + "T12:00:00");
+  const weekDay = (dayStart.getDay() + 6) % 7;
+  dayStart.setDate(dayStart.getDate() - weekDay);
+  const weekStart = [dayStart.getFullYear(), String(dayStart.getMonth() + 1).padStart(2, "0"), String(dayStart.getDate()).padStart(2, "0")].join("-");
+  const filter = {
+    search: q, kind,
+    month: period === "month" ? month : null,
+    startDate: period === "today" ? today : period === "week" ? weekStart : period === "custom" ? from : null,
+    endDate: period === "today" || period === "week" ? today : period === "custom" ? to : null,
+  };
+  const invalidRange = period === "custom" && from > to;
+  const list = invalidRange ? [] : txs.filter((t) => matchesStatement(t, filter));
   const kinds = [["all", "Todas"], ["expense", "Saídas"], ["income", "Entradas"], ["transfer", "Transf."]] as const;
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Movimentações</h1>
-      <ExportStatementButton key={`${workspace.id}-${q}-${month}-${kind}`} filter={filter} />
-      <Input placeholder="Pesquisar" value={q} onChange={(e) => setQ(e.target.value)} />
-      <div className="flex items-center justify-between rounded-2xl bg-card p-2 shadow-soft">
-        <Button variant="ghost" size="icon" aria-label="Mês anterior" disabled={!month}
-          onClick={() => month && setMonth(shiftInvoiceKey(month, -1))}><ChevronLeft className="h-4 w-4" /></Button>
-        <button type="button" className="text-sm font-medium" onClick={() => setMonth(month ? null : currentMonth())}>
-          {month ? invoiceLabel(month) : "Todos os meses"}
-        </button>
-        <Button variant="ghost" size="icon" aria-label="Próximo mês" disabled={!month}
-          onClick={() => month && setMonth(shiftInvoiceKey(month, 1))}><ChevronRight className="h-4 w-4" /></Button>
+      <div className="space-y-3 rounded-2xl bg-card p-3 shadow-soft">
+        <div className="relative">
+          <Search aria-hidden="true" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input aria-label="Pesquisar lançamentos por nome ou categoria" placeholder="Buscar por nome, descrição ou categoria..." className="pl-9 pr-10" value={q} onChange={(e) => setQ(e.target.value)} />
+          {q && <button type="button" aria-label="Limpar pesquisa" className="absolute right-3 top-1/2 -translate-y-1/2" onClick={() => setQ("")}><X className="h-4 w-4" /></button>}
+        </div>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar por período">
+          {([["today","Hoje"],["week","Esta semana"],["month","Mês"],["all","Tudo"],["custom","Personalizado"]] as const).map(([value, label]) => (
+            <button key={value} type="button" onClick={() => setPeriod(value)} aria-pressed={period === value}
+              className={cn("rounded-full border px-3 py-1.5 text-sm transition-colors", period === value ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-accent")}>{label}</button>
+          ))}
+        </div>
+        {period === "month" && (
+          <div className="flex items-center justify-between rounded-xl border bg-background px-2">
+            <Button variant="ghost" size="icon" aria-label="Mês anterior" onClick={() => setMonth((m) => shiftInvoiceKey(m, -1))}><ChevronLeft className="h-4 w-4" /></Button>
+            <span className="text-sm font-medium capitalize">{invoiceLabel(month)}</span>
+            <Button variant="ghost" size="icon" aria-label="Próximo mês" onClick={() => setMonth((m) => shiftInvoiceKey(m, 1))}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
+        )}
+        {period === "custom" && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="space-y-1 text-xs text-muted-foreground">De <Input type="date" aria-label="Data inicial" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
+            <label className="space-y-1 text-xs text-muted-foreground">Até <Input type="date" aria-label="Data final" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+            {invalidRange && <p role="alert" className="text-sm text-destructive sm:col-span-2">A data inicial deve ser anterior à data final.</p>}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">{list.length} lançamento(s) encontrado(s){txs.length >= 500 ? " entre os 500 mais recentes" : ""}</p>
+          {!invalidRange && <ExportStatementButton key={`${workspace.id}-${q}-${period}-${month}-${from}-${to}-${kind}`} filter={filter} />}
+        </div>
       </div>
       <div className="flex gap-2 overflow-x-auto" role="group" aria-label="Filtrar por tipo">
         {kinds.map(([v, l]) => (
