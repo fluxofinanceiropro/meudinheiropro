@@ -67,18 +67,26 @@ export const transactionsQuery = (ws: string) =>
   queryOptions({
     queryKey: ["transactions", ws],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select(
-          "id,kind,description,amount,occurred_on,status,payment_method,account_id,to_account_id,category_id,card_id,categories(name,icon,color)",
-        )
-        .eq("workspace_id", ws)
-        .is("deleted_at", null)
-        .order("occurred_on", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(500);
-      if (error) throw error;
-      return data as unknown as Transaction[];
+      const pageSize = 500;
+      const all: Transaction[] = [];
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await supabase
+          .from("transactions")
+          .select(
+            "id,kind,description,amount,occurred_on,status,payment_method,account_id,to_account_id,category_id,card_id,categories(name,icon,color)",
+          )
+          .eq("workspace_id", ws)
+          .is("deleted_at", null)
+          .order("occurred_on", { ascending: false })
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .range(offset, offset + pageSize - 1);
+        if (error) throw error;
+        const page = (data ?? []) as unknown as Transaction[];
+        all.push(...page);
+        if (page.length < pageSize) break;
+      }
+      return all;
     },
   });
 

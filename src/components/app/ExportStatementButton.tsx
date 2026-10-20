@@ -18,7 +18,7 @@ export function ExportStatementButton({ filter }: ExportStatementButtonProps) {
       const rows: Transaction[] = []; let offset = 0;
       while (true) {
         let query = supabase.from("transactions").select("id,kind,description,amount,occurred_on,status,payment_method,account_id,to_account_id,category_id,card_id,categories(name)")
-          .eq("workspace_id", workspace.id).is("deleted_at", null).order("occurred_on", { ascending: false }).order("id").range(offset, offset + 499);
+          .eq("workspace_id", workspace.id).is("deleted_at", null).order("occurred_on", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).range(offset, offset + 499);
         if (filter.month) { const [y, m] = filter.month.split("-").map(Number); const next = new Date(y ?? 0, m ?? 1, 1); const end = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-01`; query = query.gte("occurred_on", `${filter.month}-01`).lt("occurred_on", end); }
         if (filter.startDate) query = query.gte("occurred_on", filter.startDate);
         if (filter.endDate) query = query.lte("occurred_on", filter.endDate);
