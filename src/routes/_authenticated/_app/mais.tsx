@@ -83,6 +83,8 @@ function Mais() {
       <h1 className="text-2xl font-semibold">Mais</h1>
       <ProfileSettings />
       <Button variant="outline" className="w-full" asChild><Link to="/metas">Reserva e metas</Link></Button>
+      <Button variant="outline" className="w-full" asChild><Link to="/relatorios">Relatórios</Link></Button>
+      <Button variant="outline" className="w-full" asChild><Link to="/assinatura">Minha assinatura</Link></Button>
       <Button variant="outline" className="w-full" asChild><Link to="/contas">Contas e categorias</Link></Button>
       <Button variant="outline" className="w-full" asChild><Link to="/comecar">Novo espaço financeiro</Link></Button>
 
