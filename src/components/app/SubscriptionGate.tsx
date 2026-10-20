@@ -47,8 +47,9 @@ export function SubscriptionGate({ workspaceId, children }: { workspaceId: strin
       const { data: auth, error: authError } = await supabase.auth.getUser();
       if (authError || !auth.user) throw authError || new Error("Faça login novamente.");
       const { error } = await supabase.from("saas_payment_requests").insert({ owner_id: auth.user.id, plan_code: plan, amount: plans[plan].amount });
-      if (error && error.code !== "23505") throw error;
-      toast.success("Solicitação registrada! Após pagar, aguarde a confirmação.");
+      if (error?.code === "23505") throw new Error("Você já possui uma solicitação pendente. Aguarde a confirmação pelo administrador antes de pedir outro plano.");
+      if (error) throw error;
+      toast.success("Solicitação registrada! Envie o comprovante pelo WhatsApp para conferência.");
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setSending(false); }
@@ -62,7 +63,7 @@ export function SubscriptionGate({ workspaceId, children }: { workspaceId: strin
     <div className="sticky top-0 z-20 flex flex-wrap items-center justify-center gap-2 border-b bg-amber-50 px-3 py-2 text-center text-sm text-amber-950">
       <Clock3 className="h-4 w-4" aria-hidden="true" />
       <span>Seu teste grátis termina em <strong className="tabular-nums">{formatRemaining(access.data.trial_ends_at, now)}</strong></span>
-      <span className="text-xs">R$ 9,90/30 dias após o teste</span>
+      <span className="text-xs">Após o teste: mensal R$ 9,90 ou anual R$ 97,00</span>
     </div>
     {children}
   </>;
@@ -88,7 +89,7 @@ export function SubscriptionGate({ workspaceId, children }: { workspaceId: strin
         <MessageCircle className="h-4 w-4" />Enviar comprovante pelo WhatsApp · (37) 99662-0552
       </a>
       <Button className="w-full" onClick={() => void requestPayment()} disabled={sending}><CreditCard className="mr-2 h-4 w-4" />{sending ? "Registrando…" : "Já paguei — solicitar conferência"}</Button>
-      <p className="text-xs text-muted-foreground">O acesso por mais 30 dias só será liberado após você conferir o Pix e confirmar no painel administrativo. Este botão não confirma o pagamento.</p>
+      <p className="text-xs text-muted-foreground">O acesso por {plans[plan].period} só será liberado após o administrador conferir o Pix recebido e confirmar no painel. Este botão não confirma o pagamento.</p>
       <Button variant="outline" className="w-full" onClick={() => qc.invalidateQueries({ queryKey: ["subscription", workspaceId] })}>Verificar liberação</Button>
     </div>
   </div>;
