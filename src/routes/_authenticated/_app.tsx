@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { workspacesQuery } from "@/lib/queries";
 import { WorkspaceProvider, WS_STORAGE_KEY } from "@/hooks/use-workspace";
 import { AppShell } from "@/components/app/AppShell";
+import { SubscriptionGate } from "@/components/app/SubscriptionGate";
 
 export const Route = createFileRoute("/_authenticated/_app")({
   loader: ({ context }) => context.queryClient.ensureQueryData(workspacesQuery()),
@@ -31,7 +32,7 @@ function AppLayout() {
   return (
     <WorkspaceProvider value={{ workspace, workspaces, setWorkspaceId }}>
       <AppShell>
-        <Outlet />
+        <SubscriptionGate workspaceId={workspace.id}><Outlet /></SubscriptionGate>
       </AppShell>
     </WorkspaceProvider>
   );
