@@ -70,7 +70,7 @@ export function VoiceTransactionButton({ onDraft }: VoiceTransactionButtonProps)
   }
   const busy = stage !== "idle" && stage !== "recording";
   return <>
-    <Button variant="outline" className="mt-2" onClick={() => { setError(""); setText(""); setOpen(true); }}><Mic /> Lançar por voz</Button>
+    <Button variant="outline" className="mt-2 border-sidebar-foreground/35 bg-sidebar-foreground/10 font-semibold text-sidebar-foreground hover:bg-sidebar-foreground/20 hover:text-sidebar-foreground" onClick={() => { setError(""); setText(""); setOpen(true); }}><Mic /> Lançar por voz</Button>
     <Dialog open={open} onOpenChange={(value) => { if (!value) cancel(); setOpen(value); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader><DialogTitle>Lançar por voz</DialogTitle><DialogDescription>Gravação de uma movimentação</DialogDescription></DialogHeader>
