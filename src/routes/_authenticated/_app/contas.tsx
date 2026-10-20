@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -146,6 +147,7 @@ function ContasPage() {
 
   return (
     <div className="space-y-4">
+      <Button variant="ghost" size="sm" asChild><Link to="/mais"><ArrowLeft className="mr-2 h-4 w-4" />Voltar para Mais</Link></Button>
       <h1 className="text-2xl font-semibold">Contas e categorias</h1>
       <Tabs defaultValue="contas">
         <TabsList className="grid w-full grid-cols-3">
