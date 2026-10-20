@@ -76,7 +76,7 @@ function Movimentacoes() {
           </div>
         )}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">{list.length} lançamento(s) encontrado(s){txs.length >= 500 ? " entre os 500 mais recentes" : ""}</p>
+          <p className="text-xs text-muted-foreground">{list.length} lançamento(s) encontrado(s)</p>
           {!invalidRange && <ExportStatementButton key={`${workspace.id}-${q}-${period}-${month}-${from}-${to}-${kind}`} filter={filter} />}
         </div>
       </div>
