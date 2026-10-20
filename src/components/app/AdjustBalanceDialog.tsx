@@ -36,21 +36,17 @@ export function AdjustBalanceDialog({ open, onOpenChange }: Props) {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      for (const a of accounts) {
-        const id = a.account_id;
-        if (!id) continue;
-        const desired = parseBRL(values[id] ?? "");
-        if (desired === null) continue;
-        const current = toCents(a.balance ?? 0);
-        if (desired === current) continue;
-        const initial = toCents(a.initial_balance ?? 0);
-        const newInitial = initial + (desired - current);
-        const { error } = await supabase
-          .from("accounts")
-          .update({ initial_balance: Number(centsToDecimal(newInitial)) })
-          .eq("id", id);
-        if (error) throw error;
-      }
+      const changes = accounts.filter(a => a.account_id).map(a => {
+        const entered = values[a.account_id!] ?? "";
+        const desired = parseBRL(entered);
+        if (desired === null) throw new Error(`Informe um saldo válido para ${a.name}`);
+        return { id: a.account_id!, expected_cents: toCents(a.balance ?? 0), desired_cents: desired };
+      }).filter(a => a.desired_cents !== a.expected_cents);
+      if (!changes.length) return;
+      const { error } = await supabase.rpc("adjust_workspace_balances", {
+        _workspace: workspace.id, _changes: changes,
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Saldos atualizados");
