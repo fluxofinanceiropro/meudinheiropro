@@ -1,0 +1,28 @@
+name: Staging financial integration (manual only)
+on:
+  workflow_dispatch:
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      STAGING_DATABASE_URL: ${{ secrets.MEUDINHEIRO_STAGING_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Reject missing or wrong staging database
+        run: |
+          if [ -z "$STAGING_DATABASE_URL" ]; then
+            echo "::error::Configure MEUDINHEIRO_STAGING_DATABASE_URL as an Actions secret (staging only)."
+            exit 1
+          fi
+          if [[ "$STAGING_DATABASE_URL" != *"jewoooybinxfcssyixff"* ]]; then
+            echo "::error::Database URL does not match isolated staging project."
+            exit 1
+          fi
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Test financial authorization and concurrency against staging
+        run: bun run scripts/staging-financial-tests.ts
