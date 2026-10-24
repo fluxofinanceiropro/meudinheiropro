@@ -1,0 +1,36 @@
+name: Staging financial integration (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: staging-financial-manual
+  cancel-in-progress: false
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      STAGING_DATABASE_URL: ${{ secrets.MEUDINHEIRO_STAGING_DATABASE_URL }}
+    steps:
+      - name: Reject missing or wrong staging database
+        shell: bash
+        run: |
+          if [ -z "$STAGING_DATABASE_URL" ]; then
+            echo "::error::Configure MEUDINHEIRO_STAGING_DATABASE_URL as an Actions secret (staging only)."
+            exit 1
+          fi
+          if [[ "$STAGING_DATABASE_URL" != *"jewoooybinxfcssyixff"* ]]; then
+            echo "::error::Database URL does not match the isolated Supabase staging project."
+            exit 1
+          fi
+      - name: Checkout reviewed integration test commit
+        uses: actions/checkout@v4
+        with:
+          ref: 9dfc5b693a56a3f78ff2f43bf791d03f6450a738
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Test financial authorization and concurrency against staging
+        run: bun run scripts/staging-financial-tests.ts
