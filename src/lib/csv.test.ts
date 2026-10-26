@@ -13,7 +13,8 @@ describe("extrato CSV", () => {
     expect(matchesStatement(tx, filter)).toBe(true);
     expect(matchesStatement({ ...tx, occurred_on: "2026-09-19" }, filter)).toBe(false);
     expect(matchesStatement({ ...tx, kind: "income" }, filter)).toBe(false);
-    expect(matchesStatement({ ...tx, description: "Aluguel" }, filter)).toBe(false);
+    expect(matchesStatement({ ...tx, description: "Aluguel" }, filter)).toBe(true); // A categoria ainda corresponde à pesquisa.
+    expect(matchesStatement({ ...tx, description: "Aluguel", categories: { name: "Moradia" } }, filter)).toBe(false);
   });
   it("preserva aspas e quebras, neutralizando fórmulas de planilha", () => {
     const csv = statementCsv([{ ...tx, description: '=HYPERLINK("x")\ntexto' }], new Map(), new Map());
