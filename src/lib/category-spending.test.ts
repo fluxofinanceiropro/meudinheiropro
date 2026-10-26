@@ -26,8 +26,8 @@ describe("category spending", () => {
   });
   it("retains legacy and uncategorized expenses without losing cents", () => {
     const slices = categorySpending([transaction({ categories: { name: "Antiga" }, amount: 0.1 }), transaction({ categories: null, category_id: null, amount: 0.2 })], "2026-10");
-    expect(slices).toContainEqual({ id: "food", name: "Antiga", value: 10, color: "#738094", icon: "circle" });
-    expect(slices).toContainEqual({ id: "uncategorized", name: "Sem categoria", value: 20, color: "#738094", icon: "circle" });
+    expect(slices).toContainEqual({ id: "food", name: "Antiga", value: 10, color: "#087f60", icon: "circle" });
+    expect(slices).toContainEqual({ id: "uncategorized", name: "Sem categoria", value: 20, color: "#4387bd", icon: "circle" });
   });
   it("preserves the four largest categories and sums the remainder as Other", () => {
     const rows = Array.from({ length: 6 }, (_, i) => transaction({ category_id: `cat-${i}`, amount: i + 1 }));
