@@ -16,14 +16,26 @@ jobs:
       - name: Reject missing or wrong staging database
         shell: bash
         run: |
-          if [ -z "$STAGING_DATABASE_URL" ]; then
-            echo "::error::Configure MEUDINHEIRO_STAGING_DATABASE_URL as an Actions secret (staging only)."
-            exit 1
-          fi
-          if [[ "$STAGING_DATABASE_URL" != *"jewoooybinxfcssyixff"* ]]; then
-            echo "::error::Database URL does not match the isolated Supabase staging project."
-            exit 1
-          fi
+          node <<'NODE'
+          const expectedProject = 'jewoooybinxfcssyixff';
+          const raw = process.env.STAGING_DATABASE_URL;
+          function fail() {
+            console.error('::error::Database connection is missing, malformed, or does not target the isolated Supabase staging project.');
+            process.exit(1);
+          }
+          if (!raw) fail();
+          let url;
+          try { url = new URL(raw); } catch { fail(); }
+          if (!['postgres:', 'postgresql:'].includes(url.protocol)) fail();
+          if (!url.password || !url.username || !url.hostname) fail();
+          // Direct Supabase connection or Supavisor transaction/session pooler.
+          // Never trust a project ID appearing only in a password, query or fragment.
+          const direct = url.hostname === `db.${expectedProject}.supabase.co`
+            && decodeURIComponent(url.username) === 'postgres';
+          const pooled = /^(?:aws-[0-9]+-[a-z0-9-]+\.pooler\.supabase\.com)$/.test(url.hostname)
+            && decodeURIComponent(url.username) === `postgres.${expectedProject}`;
+          if (!direct && !pooled) fail();
+          NODE
       - name: Checkout reviewed integration test commit
         uses: actions/checkout@v4
         with:
